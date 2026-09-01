@@ -513,7 +513,7 @@ function setMode(mode){
   document.querySelectorAll('.rail-btn[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
   renderListPanel();
   renderDetailPanel();
-  if(mode === 'chat') showMobileDetail(); else showMobileList();
+  showMobileList();
 }
 function showMobileDetail(){ el('workspace').classList.add('detail-active'); }
 function showMobileList(){ el('workspace').classList.remove('detail-active'); }
