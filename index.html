@@ -56,7 +56,6 @@
 
   /* ---------- Workspace: rail + list + detail ---------- */
   .workspace{ flex:1; min-height:0; display:flex; }
-  .workspace.manual-mode .list-panel{ display:none; }
 
   .rail{
     width:68px; flex-shrink:0; background:var(--navy-950); border-right:1px solid var(--navy-600);
@@ -222,8 +221,17 @@
   @keyframes toastIn{ from{ opacity:0; transform:translateY(-8px);} to{ opacity:1; transform:translateY(0);} }
   @media (prefers-reduced-motion: reduce){ .toast-notif{ animation:none; } }
 
-  /* ---------- 매뉴얼 게시판 (관공서 스타일) ---------- */
+  /* ---------- 매뉴얼 게시판 (관공서 스타일, 전체화면 오버레이) ---------- */
+  .manual-overlay{ position:fixed; inset:0; z-index:40; background:#fff; }
+  .manual-overlay[hidden]{ display:none; }
   .manual-page{ background:#fff; height:100%; overflow-y:auto; -webkit-overflow-scrolling:touch; color:#22262E; }
+  .manual-exit{
+    position:sticky; top:0; z-index:2; display:flex; align-items:center; gap:4px; width:100%;
+    background:#fff; border:none; border-bottom:1px solid #E4E7EC;
+    padding:12px 20px; font-size:12px; font-weight:700; color:#8A93A3; cursor:pointer; text-align:left;
+    font-family:'Pretendard',sans-serif;
+  }
+  .manual-exit:hover{ color:#1B4A9C; }
   .manual-hero{ text-align:center; padding:34px 20px 20px; border-bottom:3px solid #1B4A9C; background:linear-gradient(180deg,#F6F8FB,#fff); }
   .manual-taegeuk{ width:50px; height:50px; margin:0 auto 8px; display:block; }
   .manual-title{ font-family:'East Sea Dokdo', cursive; font-size:38px; margin:0; color:#1B2A4A; letter-spacing:1px; line-height:1; }
@@ -242,8 +250,7 @@
   .manual-row td{ padding:14px 24px; border-bottom:1px solid #EEF0F3; cursor:pointer; vertical-align:top; }
   .manual-row:hover td{ background:#F5F8FC; }
   .manual-regno{ font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:#1B4A9C; font-weight:700; white-space:nowrap; }
-  .manual-row-title{ font-weight:700; font-size:14px; color:#1B2A4A; margin:0 0 3px; }
-  .manual-row-snippet{ font-size:12px; color:#7A8290; max-width:420px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .manual-row-title{ font-weight:700; font-size:14px; color:#1B2A4A; margin:0; }
   .manual-row-date{ font-size:11.5px; color:#9AA3B0; font-family:'IBM Plex Mono', monospace; text-align:right; white-space:nowrap; }
   .manual-detail{ padding:30px 28px 48px; max-width:760px; margin:0 auto; }
   .manual-back{ background:none; border:none; color:#1B4A9C; font-weight:700; font-size:12.5px; cursor:pointer; padding:0; margin-bottom:20px; font-family:'Pretendard',sans-serif; }
@@ -254,6 +261,39 @@
   .manual-detail-content{ font-size:14px; line-height:1.8; color:#28303D; white-space:pre-wrap; word-break:break-word; }
   .manual-detail-actions{ margin-top:26px; padding-top:16px; border-top:1px solid #EEF0F3; }
   .manual-page .empty{ padding:40px 12px; }
+
+  .manual-comments-section{ margin-top:28px; padding-top:20px; border-top:2px solid #1B4A9C; }
+  .manual-comments-title{ font-size:13px; font-weight:800; color:#1B2A4A; margin:0 0 14px; letter-spacing:0.3px; }
+  .manual-comment-row{ display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #EEF0F3; }
+  .manual-comment-row:last-child{ border-bottom:none; }
+  .manual-comment-avatar{ width:30px; height:30px; border-radius:50%; flex-shrink:0; background-size:cover; background-position:center; }
+  .manual-comment-body{ flex:1; min-width:0; }
+  .manual-comment-head{ display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; }
+  .manual-comment-name{ font-weight:700; font-size:12.5px; color:#1B2A4A; }
+  .manual-comment-time{ font-size:10.5px; color:#9AA3B0; font-family:'IBM Plex Mono', monospace; }
+  .manual-comment-text{ font-size:13px; color:#28303D; margin-top:3px; line-height:1.55; word-break:break-word; }
+  .manual-comment-del{ background:none; border:none; color:#B0B8C4; font-size:10px; font-family:'IBM Plex Mono', monospace; cursor:pointer; padding:4px 0 0; }
+  .manual-comment-del:hover{ color:#C23B3B; }
+  .manual-comment-compose{ display:flex; gap:8px; margin-top:14px; }
+  .manual-comment-compose input{ flex:1; min-width:0; border:1px solid #C7CDD6; border-radius:4px; padding:9px 12px; font-size:13px; font-family:'Pretendard',sans-serif; color:#22262E; }
+  .manual-comment-compose input:focus-visible{ outline:2px solid #1B4A9C; }
+  .manual-comment-compose button{ background:#1B4A9C; color:#fff; border:none; border-radius:4px; padding:0 18px; font-weight:700; font-size:12.5px; cursor:pointer; font-family:'Pretendard',sans-serif; }
+  .manual-comment-compose button:hover{ background:#153B7C; }
+
+  /* 매뉴얼 등록 모달: 시청 서식 톤 */
+  .modal.modal-manual{
+    max-width:680px; background:#fff; border:1px solid #C7CDD6; padding:38px 44px 32px;
+    box-shadow:0 24px 60px rgba(20,30,50,0.28);
+  }
+  .modal-manual h3{ text-align:center; font-family:'East Sea Dokdo', cursive; font-size:30px; font-weight:400; color:#1B2A4A; margin:0 0 6px; }
+  .modal-manual p.hint{ text-align:center; }
+  .modal-manual .field label{ color:#1B4A9C; font-family:'Pretendard',sans-serif; text-transform:none; letter-spacing:0; }
+  .modal-manual .field.center-field input{ text-align:center; font-weight:700; font-size:15px; }
+  .modal-manual .field input, .modal-manual .field textarea{ border:1px solid #C7CDD6; background:#F9FAFC; border-radius:3px; }
+  .modal-manual .field input:focus-visible, .modal-manual .field textarea:focus-visible{ outline:2px solid #1B4A9C; }
+  .modal-manual .field textarea{ min-height:140px; }
+  .modal-manual .btn-primary{ background:#1B4A9C; }
+  .modal-manual .btn-primary:hover{ background:#153B7C; }
 
   /* ---------- Mobile ---------- */
   @media (max-width:860px){
@@ -276,8 +316,8 @@
     .manual-title{ font-size:32px; }
     .manual-toolbar{ padding:14px; }
     .manual-table thead th, .manual-row td{ padding:12px 14px; }
-    .manual-row-snippet{ max-width:180px; }
     .manual-detail{ padding:20px 16px 40px; }
+    .modal.modal-manual{ padding:26px 20px 22px; max-width:100%; }
   }
 </style>
 </head>
@@ -340,6 +380,8 @@
 
 <div class="toast-stack" id="toastStack"></div>
 
+<div class="manual-overlay" id="manualOverlay" hidden></div>
+
 <script type="module">
 /* =========================================================
    초자연재난관리국 내부망 — 고구마켓과 같은 Firebase 프로젝트를 재사용해.
@@ -379,6 +421,8 @@ let unsubscribeReplies = null;
 let lastManuals = [];
 let selectedManualId = null;
 let manualSearchQuery = '';
+let manualComments = [];
+let unsubscribeManualComments = null;
 let agentProfiles = {};
 let pendingPhotoURL = null;
 let replyingTo = null;
@@ -409,7 +453,6 @@ let myProfile = getLocalProfile();
 function formatTime(iso){ return new Date(iso).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }); }
 function escapeHtml(str){ const d=document.createElement('div'); d.textContent = str ?? ''; return d.innerHTML; }
 function showToastError(msg){ alert(msg || '문제가 생겼어요. 인터넷 연결을 확인하고 다시 시도해주세요.'); }
-function initials(name){ return (name || '?').trim().slice(0,2); }
 function pad4(n){ return String(n).padStart(4,'0'); }
 
 function avatarColor(id){
@@ -423,9 +466,8 @@ function avatarStyle(authorId){
   if(p && p.photoURL) return `background-image:url('${p.photoURL}');`;
   return `background-color:${avatarColor(authorId)};`;
 }
-function avatarInner(authorId, authorName){
-  const p = agentProfiles[authorId];
-  return (p && p.photoURL) ? '' : escapeHtml(initials(authorName));
+function avatarInner(){
+  return '';
 }
 function displayName(authorId, fallbackName){
   const p = agentProfiles[authorId];
@@ -462,12 +504,11 @@ function updateAgentBar(){
   if(myProfile && myProfile.photoURL){
     btn.style.backgroundImage = `url('${myProfile.photoURL}')`;
     btn.style.backgroundColor = '';
-    el('railAvatarText').textContent = '';
   }else{
     btn.style.backgroundImage = '';
     btn.style.backgroundColor = avatarColor(myAgentId);
-    el('railAvatarText').textContent = (myProfile && myProfile.name) ? initials(myProfile.name) : '?';
   }
+  el('railAvatarText').textContent = '';
 }
 
 function tickClock(){
@@ -484,14 +525,13 @@ el('profileBtn').addEventListener('click', openProfileModal);
 function openProfileModal(){
   pendingPhotoURL = (myProfile && myProfile.photoURL) || null;
   const previewStyle = pendingPhotoURL ? `background-image:url('${pendingPhotoURL}');` : `background-color:${avatarColor(myAgentId)};`;
-  const previewText = pendingPhotoURL ? '' : ((myProfile && myProfile.name) ? initials(myProfile.name) : '?');
   openModal(`
     <h3>요원 등록 / 프로필</h3>
     <p class="hint">등록한 이름으로 채널과 공고에 표시됩니다. 이 기기에서만 유지됩니다.</p>
     <div class="field">
       <label>프로필 사진 (선택)</label>
       <div class="photo-picker">
-        <div class="photo-preview" id="photoPreview" style="${previewStyle}">${previewText}</div>
+        <div class="photo-preview" id="photoPreview" style="${previewStyle}"></div>
         <div class="photo-picker-actions">
           <input type="file" id="photoInput" accept="image/*" style="display:none">
           <button type="button" class="btn btn-ghost btn-small" id="photoPickBtn">사진 선택</button>
@@ -525,8 +565,6 @@ function openProfileModal(){
     const prev = el('photoPreview');
     prev.style.backgroundImage = '';
     prev.style.backgroundColor = avatarColor(myAgentId);
-    const nm = el('profNameInput').value.trim();
-    prev.textContent = nm ? initials(nm) : '?';
     el('photoRemoveBtn').style.display = 'none';
   });
   el('profSave').addEventListener('click', async () => {
@@ -551,7 +589,7 @@ function requireProfile(){
   return false;
 }
 
-function openModal(html){ el('modalBody').innerHTML = html; el('overlay').hidden = false; }
+function openModal(html, extraClass){ el('modalBody').className = 'modal' + (extraClass ? ' ' + extraClass : ''); el('modalBody').innerHTML = html; el('overlay').hidden = false; }
 function closeModal(){ el('overlay').hidden = true; el('modalBody').innerHTML = ''; }
 el('overlay').addEventListener('click', (e) => { if(e.target.id === 'overlay') closeModal(); });
 document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeModal(); });
@@ -632,13 +670,21 @@ el('adminToggleBtn').addEventListener('click', () => {
 document.querySelectorAll('.rail-btn[data-mode]').forEach(btn => {
   btn.addEventListener('click', () => setMode(btn.dataset.mode));
 });
+let preManualMode = 'chat';
 function setMode(mode){
-  currentMode = mode;
   document.querySelectorAll('.rail-btn[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-  el('workspace').classList.toggle('manual-mode', mode === 'manual');
+  if(mode === 'manual'){
+    if(currentMode !== 'manual') preManualMode = currentMode;
+    currentMode = 'manual';
+    el('manualOverlay').hidden = false;
+    renderManualPage();
+    return;
+  }
+  el('manualOverlay').hidden = true;
+  currentMode = mode;
   renderListPanel();
   renderDetailPanel();
-  if(mode === 'manual') showMobileDetail(); else showMobileList();
+  showMobileList();
 }
 function showMobileDetail(){ el('workspace').classList.add('detail-active'); }
 function showMobileList(){ el('workspace').classList.remove('detail-active'); }
@@ -646,12 +692,10 @@ function showMobileList(){ el('workspace').classList.remove('detail-active'); }
 function renderListPanel(){
   if(currentMode === 'chat') renderChatList();
   else if(currentMode === 'recruit') renderRecruitListPanel();
-  else el('listPanel').innerHTML = '';
 }
 function renderDetailPanel(){
   if(currentMode === 'chat') renderChatDetail();
   else if(currentMode === 'recruit') renderRecruitDetailPanel();
-  else renderManualPage();
 }
 
 /* ---------- 채널 (공용 채팅) ---------- */
@@ -941,13 +985,20 @@ const TAEGEUK_SVG = `<svg class="manual-taegeuk" viewBox="0 0 100 100" aria-hidd
   <circle cx="50" cy="25" r="25" fill="#C23B3B"/>
   <circle cx="50" cy="75" r="25" fill="#1B4A9C"/>
 </svg>`;
+function manualExitBtnHtml(){
+  return `<button type="button" class="manual-exit" id="manualExitBtn">‹ 신규조사반으로 돌아가기</button>`;
+}
+function bindManualExit(){
+  el('manualExitBtn').addEventListener('click', () => setMode(preManualMode));
+}
 function renderManualPage(){
   if(selectedManualId) renderManualDetail(); else renderManualList();
 }
 function renderManualList(){
-  const panel = el('detailPanel');
+  const panel = el('manualOverlay');
   panel.innerHTML = `
     <div class="manual-page">
+      ${manualExitBtnHtml()}
       <div class="manual-hero">
         ${TAEGEUK_SVG}
         <h2 class="manual-title">초자연재난관리국</h2>
@@ -964,6 +1015,7 @@ function renderManualList(){
       <div id="manualTableWrap"></div>
     </div>
   `;
+  bindManualExit();
   el('manualSearchInput').value = manualSearchQuery;
   el('newManualBtn').addEventListener('click', () => { if(!requireProfile()) return; openManualFormModal(); });
   el('manualSearchBtn').addEventListener('click', () => { manualSearchQuery = el('manualSearchInput').value; renderManualResults(); });
@@ -989,23 +1041,52 @@ function renderManualResults(){
         ${filtered.map(m => `
           <tr class="manual-row" data-id="${m.id}">
             <td class="manual-regno">${escapeHtml(m.regNo)}</td>
-            <td><div class="manual-row-title">${escapeHtml(m.disasterName)}</div><div class="manual-row-snippet">${escapeHtml(m.content)}</div></td>
+            <td><div class="manual-row-title">${escapeHtml(m.disasterName)}</div></td>
             <td class="manual-row-date">${formatTime(m.createdAt)}</td>
           </tr>
         `).join('')}
       </tbody>
     </table>`;
   wrap.querySelectorAll('.manual-row').forEach(row => {
-    row.addEventListener('click', () => { selectedManualId = row.dataset.id; renderManualPage(); });
+    row.addEventListener('click', () => selectManual(row.dataset.id));
   });
+}
+function selectManual(id){
+  selectedManualId = id;
+  manualComments = [];
+  if(unsubscribeManualComments){ unsubscribeManualComments(); unsubscribeManualComments = null; }
+  renderManualPage();
+  unsubscribeManualComments = onSnapshot(
+    query(collection(db, 'manuals', id, 'comments'), orderBy('sentAt', 'asc'), limit(200)),
+    (snap) => { manualComments = snap.docs.map(d => ({ id: d.id, ...d.data() })); if(selectedManualId === id) renderManualPage(); },
+    (err) => console.error(err)
+  );
+}
+function deselectManual(){
+  selectedManualId = null;
+  manualComments = [];
+  if(unsubscribeManualComments){ unsubscribeManualComments(); unsubscribeManualComments = null; }
+  renderManualPage();
+}
+function manualCommentRowHtml(c){
+  return `
+    <div class="manual-comment-row">
+      <div class="manual-comment-avatar" style="${avatarStyle(c.authorId)}"></div>
+      <div class="manual-comment-body">
+        <div class="manual-comment-head"><span class="manual-comment-name">${displayName(c.authorId, c.authorName)}</span><span class="manual-comment-time">${formatTime(c.sentAt)}</span></div>
+        <p class="manual-comment-text">${escapeHtml(c.text)}</p>
+        ${isAdmin ? `<button type="button" class="manual-comment-del" data-del-mcomment="${c.id}">삭제</button>` : ''}
+      </div>
+    </div>`;
 }
 function renderManualDetail(){
   const m = lastManuals.find(x => x.id === selectedManualId);
-  const panel = el('detailPanel');
+  const panel = el('manualOverlay');
   if(!m){ selectedManualId = null; renderManualList(); return; }
   const canManage = isAdmin || m.authorId === myAgentId;
   panel.innerHTML = `
     <div class="manual-page">
+      ${manualExitBtnHtml()}
       <div class="manual-detail">
         <button type="button" class="manual-back" id="manualBackBtn">‹ 목록으로</button>
         <div class="manual-detail-top">
@@ -1015,29 +1096,55 @@ function renderManualDetail(){
         <p class="manual-detail-meta">${displayName(m.authorId, m.authorName)} · ${formatTime(m.createdAt)}</p>
         <div class="manual-detail-content">${escapeHtml(m.content)}</div>
         ${canManage ? `<div class="manual-detail-actions"><button class="btn btn-ghost btn-small" id="manualDeleteBtn">삭제</button></div>` : ''}
+        <div class="manual-comments-section">
+          <p class="manual-comments-title">댓글</p>
+          ${manualComments.length === 0 ? `<div class="empty">등록된 댓글이 없습니다.</div>` : manualComments.map(manualCommentRowHtml).join('')}
+          <div class="manual-comment-compose">
+            <input type="text" id="manualCommentInput" maxlength="300" placeholder="댓글을 입력하세요">
+            <button type="button" id="manualCommentSendBtn">등록</button>
+          </div>
+        </div>
       </div>
     </div>
   `;
-  el('manualBackBtn').addEventListener('click', () => { selectedManualId = null; renderManualPage(); });
+  bindManualExit();
+  el('manualBackBtn').addEventListener('click', deselectManual);
   const delBtn = el('manualDeleteBtn');
   if(delBtn) delBtn.addEventListener('click', async () => {
-    try{ await deleteDoc(doc(manualsCol, m.id)); selectedManualId = null; renderManualPage(); }
+    try{ await deleteDoc(doc(manualsCol, m.id)); deselectManual(); }
     catch(e){ showToastError(); }
   });
+  panel.querySelectorAll('[data-del-mcomment]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      try{ await deleteDoc(doc(db, 'manuals', m.id, 'comments', btn.dataset.delMcomment)); }
+      catch(e){ showToastError(); }
+    });
+  });
+  const sendManualComment = async () => {
+    if(!requireProfile()) return;
+    const input = el('manualCommentInput');
+    const text = input.value.trim();
+    if(!text) return;
+    input.value = '';
+    try{ await addDoc(collection(db, 'manuals', m.id, 'comments'), { authorId: myAgentId, authorName: myProfile.name, text, sentAt: new Date().toISOString() }); }
+    catch(e){ showToastError(); }
+  };
+  el('manualCommentSendBtn').addEventListener('click', sendManualComment);
+  el('manualCommentInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') sendManualComment(); });
 }
 function openManualFormModal(){
   openModal(`
     <h3>매뉴얼 등록</h3>
     <p class="hint">등록번호를 직접 입력해주세요.</p>
-    <div class="field"><label for="mRegNoInput">등록번호</label><input type="text" id="mRegNoInput" maxlength="30" placeholder="예: 제7호"></div>
-    <div class="field"><label for="mDisasterInput">재난 이름</label><input type="text" id="mDisasterInput" maxlength="60"></div>
+    <div class="field center-field"><label for="mRegNoInput">등록번호</label><input type="text" id="mRegNoInput" maxlength="30" placeholder="예: 제7호"></div>
+    <div class="field center-field"><label for="mDisasterInput">재난 이름</label><input type="text" id="mDisasterInput" maxlength="60"></div>
     <div class="field"><label for="mContentInput">매뉴얼 내용</label><textarea id="mContentInput" maxlength="2000"></textarea></div>
     <p class="error-msg" id="mError"></p>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="mCancel">취소</button>
       <button class="btn btn-primary" id="mSubmit">등록</button>
     </div>
-  `);
+  `, 'modal-manual');
   el('mRegNoInput').focus();
   el('mSubmit').addEventListener('click', async () => {
     const regNo = el('mRegNoInput').value.trim();
