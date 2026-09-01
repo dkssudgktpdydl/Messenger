@@ -209,6 +209,18 @@
   }
   .photo-picker-actions{ display:flex; gap:6px; flex-wrap:wrap; }
 
+  .toast-stack{ position:fixed; top:16px; right:16px; z-index:70; display:flex; flex-direction:column; gap:8px; max-width:320px; width:calc(100% - 32px); }
+  .toast-notif{
+    background:var(--navy-950); color:#fff; border:1px solid var(--navy-600); border-radius:8px;
+    padding:11px 14px; font-size:12.5px; line-height:1.5; box-shadow:0 8px 24px rgba(10,18,32,0.35);
+    cursor:pointer; animation:toastIn 0.25s ease;
+  }
+  .toast-notif strong{ color:var(--gold); }
+  .toast-sub{ display:block; color:#B9C2D6; font-size:11.5px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  @keyframes toastIn{ from{ opacity:0; transform:translateY(-8px);} to{ opacity:1; transform:translateY(0);} }
+  @media (prefers-reduced-motion: reduce){ .toast-notif{ animation:none; } }
+  .rail-btn#notifToggleBtn.on{ color:var(--gold); }
+
   /* ---------- Mobile ---------- */
   @media (max-width:860px){
     .shell{ max-width:100%; box-shadow:none; }
@@ -264,6 +276,9 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4a1 1 0 0 0 1 1h3l5 4V5L7 9H4a1 1 0 0 0-1 1z"/><path d="M16 8.5a4 4 0 0 1 0 7"/></svg>
       </button>
       <div class="rail-spacer"></div>
+      <button class="rail-btn" id="notifToggleBtn" title="내 공고 댓글 알림">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </button>
       <button class="rail-btn rail-admin" id="adminToggleBtn" title="관리자">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       </button>
@@ -279,6 +294,8 @@
 <div class="overlay" id="overlay" hidden>
   <div class="modal" id="modalBody"></div>
 </div>
+
+<div class="toast-stack" id="toastStack"></div>
 
 <script type="module">
 /* =========================================================
@@ -296,7 +313,7 @@ const ADMIN_PASSWORD = "goguma1234";
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import {
-  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, setDoc,
+  getFirestore, collection, collectionGroup, doc, addDoc, updateDoc, deleteDoc, setDoc,
   getDoc, getDocs, onSnapshot, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
@@ -319,6 +336,8 @@ let unsubscribeReplies = null;
 let agentProfiles = {};
 let pendingPhotoURL = null;
 let replyingTo = null;
+const notifBootTime = new Date().toISOString();
+let notifPermission = (typeof Notification !== 'undefined') ? Notification.permission : 'unsupported';
 
 const el = (id) => document.getElementById(id);
 const isConfigured = firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('YOUR_');
@@ -352,6 +371,12 @@ function avatarStyle(authorId){
 function avatarInner(authorId, authorName){
   const p = agentProfiles[authorId];
   return (p && p.photoURL) ? '' : escapeHtml(initials(authorName));
+}
+function displayName(authorId, fallbackName){
+  const p = agentProfiles[authorId];
+  const name = (p && p.name) ? p.name : fallbackName;
+  const bio = p && p.bio;
+  return escapeHtml(name) + ' 요원' + (bio ? ' | ' + escapeHtml(bio) : '');
 }
 function resizeImageToDataURL(file, size){
   return new Promise((resolve, reject) => {
@@ -473,6 +498,44 @@ function closeModal(){ el('overlay').hidden = true; el('modalBody').innerHTML = 
 el('overlay').addEventListener('click', (e) => { if(e.target.id === 'overlay') closeModal(); });
 document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeModal(); });
 
+/* ---------- 내 공고 댓글 알림 ---------- */
+if(notifPermission === 'granted') el('notifToggleBtn').classList.add('on');
+el('notifToggleBtn').addEventListener('click', async () => {
+  if(typeof Notification === 'undefined'){ alert('이 브라우저는 알림 기능을 지원하지 않습니다.'); return; }
+  if(Notification.permission === 'granted'){
+    alert('이미 알림이 켜져 있습니다. 이 페이지를 열어둔 동안, 내가 쓴 공고에 댓글이 달리면 알려드려요.');
+    return;
+  }
+  if(Notification.permission === 'denied'){
+    alert('브라우저에서 알림이 차단되어 있습니다. 브라우저 주소창 옆 사이트 설정에서 알림을 허용해주세요.');
+    return;
+  }
+  const perm = await Notification.requestPermission();
+  notifPermission = perm;
+  el('notifToggleBtn').classList.toggle('on', perm === 'granted');
+  if(perm === 'granted') alert('알림이 켜졌습니다. 이 페이지를 열어둔 동안(백그라운드 탭 포함) 내 공고에 새 댓글이 달리면 알려드려요.');
+});
+function showCommentNotification(r, rep, recruitId){
+  const stack = el('toastStack');
+  const toast = document.createElement('div');
+  toast.className = 'toast-notif';
+  toast.innerHTML = `<strong>${escapeHtml(rep.authorName)}</strong>님이 "${escapeHtml(r.title)}"에 댓글을 남겼습니다<span class="toast-sub">${escapeHtml(rep.text)}</span>`;
+  toast.addEventListener('click', () => {
+    setMode('recruit');
+    selectRecruit(recruitId);
+    toast.remove();
+  });
+  stack.appendChild(toast);
+  setTimeout(() => toast.remove(), 6000);
+
+  if(notifPermission === 'granted' && document.visibilityState === 'hidden'){
+    try{
+      const n = new Notification('새 댓글 · ' + r.title, { body: rep.authorName + ': ' + rep.text });
+      n.onclick = () => { window.focus(); setMode('recruit'); selectRecruit(recruitId); };
+    }catch(e){}
+  }
+}
+
 el('adminToggleBtn').addEventListener('click', () => {
   if(isAdmin){
     isAdmin = false;
@@ -564,7 +627,7 @@ function bubbleHtml(m){
     <div class="bubble-row ${mine ? 'mine' : ''}">
       ${!mine ? `<div class="msg-avatar" style="${avatarStyle(m.authorId)}">${avatarInner(m.authorId, m.authorName)}</div>` : ''}
       <div class="bubble-col">
-        ${!mine ? `<div class="bubble-name">${escapeHtml(m.authorName)}</div>` : ''}
+        ${!mine ? `<div class="bubble-name">${displayName(m.authorId, m.authorName)}</div>` : ''}
         <div class="bubble">${escapeHtml(m.text)}</div>
         <div class="bubble-time">${formatTime(m.sentAt)}${isAdmin ? `<button type="button" class="msg-delete-btn" data-del-msg="${m.id}">삭제</button>` : ''}</div>
       </div>
@@ -707,7 +770,7 @@ function commentRowHtml(rep){
     <div class="msg-row ${rep.authorId === myAgentId ? 'mine' : ''}">
       <div class="msg-avatar" style="${avatarStyle(rep.authorId)}">${avatarInner(rep.authorId, rep.authorName)}</div>
       <div class="msg-body">
-        <div class="msg-head"><span class="msg-name">${escapeHtml(rep.authorName)}</span><span class="msg-time">${formatTime(rep.sentAt)}</span></div>
+        <div class="msg-head"><span class="msg-name">${displayName(rep.authorId, rep.authorName)}</span><span class="msg-time">${formatTime(rep.sentAt)}</span></div>
         ${rep.replyToName ? `<div class="reply-to-tag">↳ ${escapeHtml(rep.replyToName)}님에게 답글</div>` : ''}
         <p class="msg-text">${escapeHtml(rep.text)}</p>
         <button type="button" class="reply-link" data-reply-id="${rep.id}" data-reply-name="${escapeHtml(rep.authorName)}">답글</button>${isAdmin ? `<button type="button" class="reply-link" data-del-reply="${rep.id}">삭제</button>` : ''}
@@ -732,7 +795,7 @@ function renderRecruitDetailPanel(){
       <div class="detail-header-main">
         <p class="detail-case">${r.caseNo}</p>
         <h3>${escapeHtml(r.title)}</h3>
-        <p class="detail-sub">${escapeHtml(r.authorName)} · ${formatTime(r.createdAt)}${r.neededCount ? ' · 필요 인원 ' + r.neededCount + '명' : ''}</p>
+        <p class="detail-sub">${displayName(r.authorId, r.authorName)} · ${formatTime(r.createdAt)}${r.neededCount ? ' · 필요 인원 ' + r.neededCount + '명' : ''}</p>
       </div>
       <span class="stamp ${r.status === 'closed' ? 'closed' : ''}">${r.status === 'closed' ? '모집완료' : '모집중'}</span>
     </div>
@@ -836,6 +899,19 @@ function boot(){
     if(currentMode === 'recruit') renderRecruitRows();
     if(selectedRecruitId) renderDetailPanel();
   }, (err) => { console.error(err); const body = document.getElementById('recruitListBody'); if(body) body.innerHTML = `<div class="empty">⚠️ 공고를 불러오지 못했습니다.</div>`; });
+
+  onSnapshot(query(collectionGroup(db, 'replies'), orderBy('sentAt', 'desc'), limit(50)), (snap) => {
+    snap.docChanges().forEach((change) => {
+      if(change.type !== 'added') return;
+      const rep = change.doc.data();
+      if(!rep.sentAt || rep.sentAt <= notifBootTime) return;
+      if(rep.authorId === myAgentId) return;
+      const recruitId = change.doc.ref.parent.parent.id;
+      const r = lastRecruits.find(x => x.id === recruitId);
+      if(!r || r.authorId !== myAgentId) return;
+      showCommentNotification(r, rep, recruitId);
+    });
+  }, (err) => console.error(err));
 }
 boot();
 </script>
