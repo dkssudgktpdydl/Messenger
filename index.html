@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>재난관리국 신규조사반 통신망</title>
+<title>초자연재난관리국 신규조사반 통신망</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -239,12 +239,12 @@
         <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="1.4"/>
         <circle cx="50" cy="50" r="37" fill="none" stroke="currentColor" stroke-width="1"/>
         <text font-size="8.6" fill="currentColor" letter-spacing="2">
-          <textPath href="#sealRing" startOffset="4%">재난관리국 · 신규조사반 · </textPath>
+          <textPath href="#sealRing" startOffset="4%">초자연재난관리국 · 신규조사반 · </textPath>
         </text>
         <text x="50" y="58" text-anchor="middle" font-size="22" font-weight="700" fill="currentColor">災</text>
       </svg>
       <div class="brand-text">
-        <h1>재난관리국 신규조사반</h1>
+        <h1>초자연재난관리국 신규조사반</h1>
         <p class="tagline">INTERNAL COMMS · SECURE CHANNEL</p>
       </div>
     </div>
@@ -253,7 +253,7 @@
       <div class="status-line"><span class="status-dot"></span>ONLINE · <span id="statusClock">--:--:--</span></div>
     </div>
   </header>
-  <div class="notice-bar">※ 본 통신망은 재난관리국 소속 요원 전용입니다. 외부 유출을 금지합니다.</div>
+  <div class="notice-bar">※ 본 통신망은 초자연재난관리국 소속 요원 전용입니다. 외부 유출을 금지합니다.</div>
 
   <div class="workspace" id="workspace">
     <nav class="rail">
@@ -282,7 +282,7 @@
 
 <script type="module">
 /* =========================================================
-   재난관리국 내부망 — 고구마켓과 같은 Firebase 프로젝트를 재사용해.
+   초자연재난관리국 내부망 — 고구마켓과 같은 Firebase 프로젝트를 재사용해.
    ========================================================= */
 const firebaseConfig = {
   apiKey: "AIzaSyADlix7kNMQdrHCBA6Licd5tQyr1BjbRBE",
@@ -418,7 +418,7 @@ function openProfileModal(){
       </div>
     </div>
     <div class="field"><label for="profNameInput">요원 이름</label><input type="text" id="profNameInput" maxlength="20" value="${myProfile ? escapeHtml(myProfile.name) : ''}"></div>
-    <div class="field"><label for="profBioInput">소속 / 비고 (선택)</label><input type="text" id="profBioInput" maxlength="40" placeholder="예: 3팀, 야간 근무" value="${myProfile && myProfile.bio ? escapeHtml(myProfile.bio) : ''}"></div>
+    <div class="field"><label for="profBioInput">소속</label><input type="text" id="profBioInput" maxlength="40" value="${myProfile && myProfile.bio ? escapeHtml(myProfile.bio) : ''}"></div>
     <p class="error-msg" id="profError"></p>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="profCancel">취소</button>
@@ -450,6 +450,7 @@ function openProfileModal(){
     const name = el('profNameInput').value.trim();
     const bio = el('profBioInput').value.trim();
     if(!name){ el('profError').textContent = '이름을 적어주세요.'; return; }
+    if(!bio){ el('profError').textContent = '소속을 적어주세요.'; return; }
     myProfile = { name, bio, photoURL: pendingPhotoURL || null };
     setLocalProfile(myProfile);
     agentProfiles[myAgentId] = { name, bio, photoURL: pendingPhotoURL || null };
@@ -661,7 +662,7 @@ function openRecruitFormModal(){
   openModal(`
     <h3>공고 등록</h3>
     <p class="hint">함께 대응할 인원을 모집합니다.</p>
-    <div class="field"><label for="rTitleInput">제목</label><input type="text" id="rTitleInput" maxlength="60" placeholder="예: 심야 버스 노선 공동 조사 인원 모집"></div>
+    <div class="field"><label for="rTitleInput">제목</label><input type="text" id="rTitleInput" maxlength="60"></div>
     <div class="field"><label for="rCountInput">필요 인원 (선택)</label><input type="number" id="rCountInput" min="1" step="1"></div>
     <div class="field"><label for="rDescInput">상세 내용</label><textarea id="rDescInput" maxlength="500"></textarea></div>
     <p class="error-msg" id="rError"></p>
