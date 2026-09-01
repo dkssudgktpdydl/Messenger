@@ -69,11 +69,6 @@
   .rail-btn:hover{ background-color:var(--navy-800); color:#EDEDF0; }
   .rail-btn.active{ background-color:var(--navy-600); color:var(--gold); }
   .rail-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:1px; }
-  .rail-badge{
-    position:absolute; top:2px; right:2px; min-width:16px; height:16px; padding:0 4px; border-radius:8px;
-    background:var(--red); color:#fff; font-size:9.5px; font-weight:700; font-family:'IBM Plex Mono', monospace;
-    display:flex; align-items:center; justify-content:center; border:1.5px solid var(--navy-950);
-  }
   .rail-spacer{ flex:1; }
   .rail-admin{ color:#6B7690; }
   .rail-admin.on{ background-color:var(--red); color:#fff; }
@@ -85,7 +80,6 @@
   .list-panel{ width:320px; flex-shrink:0; background:var(--panel); border-right:1px solid var(--paper-line); display:flex; flex-direction:column; min-height:0; }
   .list-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:14px 16px 10px; flex-shrink:0; }
   .list-header h2{ display:flex; align-items:center; gap:5px; font-size:13px; font-weight:700; margin:0; color:var(--ink); font-family:'IBM Plex Mono', monospace; letter-spacing:0.2px; }
-  .hdr-mark{ color:var(--gold-dark); }
   .hdr-mark-icon{ display:inline-flex; color:var(--gold-dark); flex-shrink:0; }
   .hdr-mark-icon svg{ width:14px; height:14px; }
   .list-search{ padding:0 16px 10px; flex-shrink:0; }
@@ -158,6 +152,8 @@
   .bubble{ background:#fff; border:1px solid var(--paper-line); border-radius:16px 16px 16px 4px; padding:9px 13px; font-size:13.5px; line-height:1.5; color:var(--ink); word-break:break-word; box-shadow:0 1px 2px var(--shadow); }
   .bubble-row.mine .bubble{ background:var(--navy-950); color:#fff; border-color:var(--navy-950); border-radius:16px 16px 4px 16px; }
   .bubble-time{ font-size:9px; color:var(--ink-faint); font-family:'IBM Plex Mono', monospace; margin:3px 3px 0; }
+  .msg-delete-btn{ background:none; border:none; color:var(--ink-faint); font-size:9px; font-family:'IBM Plex Mono', monospace; cursor:pointer; padding:0; margin-left:6px; text-decoration:underline; }
+  .msg-delete-btn:hover{ color:var(--red); }
 
   /* ---------- 공고 댓글: 로그 행 + 답글 ---------- */
   .msg-row{ display:flex; gap:10px; padding:9px 4px; border-bottom:1px dashed var(--paper-line); }
@@ -266,7 +262,6 @@
       </button>
       <button class="rail-btn" data-mode="recruit" title="재난 대응 인원 모집" id="railRecruitBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4a1 1 0 0 0 1 1h3l5 4V5L7 9H4a1 1 0 0 0-1 1z"/><path d="M16 8.5a4 4 0 0 1 0 7"/></svg>
-        <span class="rail-badge" id="railRecruitBadge" hidden>0</span>
       </button>
       <div class="rail-spacer"></div>
       <button class="rail-btn rail-admin" id="adminToggleBtn" title="관리자">
@@ -307,9 +302,10 @@ import {
 
 const CHANNELS = [
   { id: 'notice', name: '신규조사반 부서 알림', subtitle: '부서 공지 · 업무 알림' },
-  { id: 'casual', name: '담소방 ^_^', subtitle: '가볍게 나누는 잡담방' }
+  { id: 'casual', name: '담소방 ^_^', subtitle: '' }
 ];
 const CHAT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.4 8.4H12a8.3 8.3 0 0 1-3.8-.9L3 21l1.9-5.7A8.3 8.3 0 0 1 4 11.5 8.4 8.4 0 0 1 12.4 3H12a8.4 8.4 0 0 1 8.4 8.4z"/></svg>';
+const RECRUIT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4a1 1 0 0 0 1 1h3l5 4V5L7 9H4a1 1 0 0 0-1 1z"/><path d="M16 8.5a4 4 0 0 1 0 7"/></svg>';
 
 let isAdmin = false;
 let db = null, messagesCol = null, recruitsCol = null, agentsCol = null;
@@ -480,7 +476,8 @@ el('adminToggleBtn').addEventListener('click', () => {
   if(isAdmin){
     isAdmin = false;
     el('adminToggleBtn').classList.remove('on');
-    if(currentMode === 'recruit'){ renderRecruitRows(); renderDetailPanel(); }
+    renderDetailPanel();
+    if(currentMode === 'recruit'){ renderRecruitRows(); }
     return;
   }
   openModal(`
@@ -498,7 +495,8 @@ el('adminToggleBtn').addEventListener('click', () => {
     if(input.value === ADMIN_PASSWORD){
       isAdmin = true; closeModal();
       el('adminToggleBtn').classList.add('on');
-      if(currentMode === 'recruit'){ renderRecruitRows(); renderDetailPanel(); }
+      renderDetailPanel();
+      if(currentMode === 'recruit'){ renderRecruitRows(); }
     }else{ el('pwError').textContent = '암호가 맞지 않습니다.'; }
   };
   el('pwSubmit').addEventListener('click', submit);
@@ -567,7 +565,7 @@ function bubbleHtml(m){
       <div class="bubble-col">
         ${!mine ? `<div class="bubble-name">${escapeHtml(m.authorName)}</div>` : ''}
         <div class="bubble">${escapeHtml(m.text)}</div>
-        <div class="bubble-time">${formatTime(m.sentAt)}</div>
+        <div class="bubble-time">${formatTime(m.sentAt)}${isAdmin ? `<button type="button" class="msg-delete-btn" data-del-msg="${m.id}">삭제</button>` : ''}</div>
       </div>
     </div>`;
 }
@@ -580,6 +578,13 @@ function renderChatBubbles(messages){
   }
   wrap.innerHTML = messages.map(bubbleHtml).join('');
   wrap.scrollTop = wrap.scrollHeight;
+  wrap.querySelectorAll('[data-del-msg]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      try{ await deleteDoc(doc(messagesCol, btn.dataset.delMsg)); }
+      catch(err){ showToastError(); }
+    });
+  });
 }
 function renderChatDetail(){
   const ch = CHANNELS.find(c => c.id === selectedChannelId) || CHANNELS[0];
@@ -588,7 +593,7 @@ function renderChatDetail(){
       <button class="back-btn" id="backBtn" aria-label="목록으로">‹</button>
       <div class="detail-header-main">
         <h3>${escapeHtml(ch.name)}</h3>
-        <p class="detail-sub">${escapeHtml(ch.subtitle)}</p>
+        ${ch.subtitle ? `<p class="detail-sub">${escapeHtml(ch.subtitle)}</p>` : ''}
       </div>
     </div>
     <div class="chat-scroll" id="chatScroll"><div class="empty">불러오는 중…</div></div>
@@ -613,16 +618,10 @@ async function sendChannelMessage(){
 }
 
 /* ---------- 재난 대응 인원 모집 ---------- */
-function updateRailBadge(){
-  const openCount = lastRecruits.filter(r => r.status !== 'closed').length;
-  const badge = el('railRecruitBadge');
-  if(openCount > 0){ badge.hidden = false; badge.textContent = openCount > 99 ? '99+' : String(openCount); }
-  else{ badge.hidden = true; }
-}
 function renderRecruitListPanel(){
   el('listPanel').innerHTML = `
     <div class="list-header">
-      <h2><span class="hdr-mark">§</span> 인원 모집</h2>
+      <h2><span class="hdr-mark-icon">${RECRUIT_ICON}</span> 게시판</h2>
       <button class="btn btn-primary btn-small" id="newRecruitBtn">+ 공고</button>
     </div>
     <div class="list-search"><input type="text" id="recruitSearch" placeholder="공고 제목 검색"></div>
@@ -710,7 +709,7 @@ function commentRowHtml(rep){
         <div class="msg-head"><span class="msg-name">${escapeHtml(rep.authorName)}</span><span class="msg-time">${formatTime(rep.sentAt)}</span></div>
         ${rep.replyToName ? `<div class="reply-to-tag">↳ ${escapeHtml(rep.replyToName)}님에게 답글</div>` : ''}
         <p class="msg-text">${escapeHtml(rep.text)}</p>
-        <button type="button" class="reply-link" data-reply-id="${rep.id}" data-reply-name="${escapeHtml(rep.authorName)}">답글</button>
+        <button type="button" class="reply-link" data-reply-id="${rep.id}" data-reply-name="${escapeHtml(rep.authorName)}">답글</button>${isAdmin ? `<button type="button" class="reply-link" data-del-reply="${rep.id}">삭제</button>` : ''}
       </div>
     </div>`;
 }
@@ -777,6 +776,12 @@ function renderRecruitDetailPanel(){
       const input = el('replyInput'); if(input) input.focus();
     });
   });
+  panel.querySelectorAll('[data-del-reply]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      try{ await deleteDoc(doc(db, 'recruits', r.id, 'replies', btn.dataset.delReply)); }
+      catch(e){ showToastError(); }
+    });
+  });
   const cancelReplyBtn = document.getElementById('cancelReplyBtn');
   if(cancelReplyBtn) cancelReplyBtn.addEventListener('click', () => { replyingTo = null; renderDetailPanel(); });
   const send = async () => {
@@ -827,7 +832,6 @@ function boot(){
     const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     docs.forEach((r, i) => { const seq = docs.length - i; r.caseNo = `CASE-${new Date(r.createdAt).getFullYear()}-${pad4(seq)}`; });
     lastRecruits = docs;
-    updateRailBadge();
     if(currentMode === 'recruit') renderRecruitRows();
     if(selectedRecruitId) renderDetailPanel();
   }, (err) => { console.error(err); const body = document.getElementById('recruitListBody'); if(body) body.innerHTML = `<div class="empty">⚠️ 공고를 불러오지 못했습니다.</div>`; });
