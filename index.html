@@ -6,7 +6,7 @@
 <title>초자연재난관리국 신규조사반 통신망</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=East+Sea+Dokdo&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <style>
   :root{
@@ -56,6 +56,7 @@
 
   /* ---------- Workspace: rail + list + detail ---------- */
   .workspace{ flex:1; min-height:0; display:flex; }
+  .workspace.manual-mode .list-panel{ display:none; }
 
   .rail{
     width:68px; flex-shrink:0; background:var(--navy-950); border-right:1px solid var(--navy-600);
@@ -72,6 +73,7 @@
   .rail-spacer{ flex:1; }
   .rail-admin{ color:#6B7690; }
   .rail-admin.on{ background-color:var(--red); color:#fff; }
+  .rail-btn#notifToggleBtn.on{ color:var(--gold); }
   .rail-avatar{ background-color:var(--navy-800); color:var(--gold); font-family:'IBM Plex Mono', monospace; font-weight:700; font-size:12px; border-radius:50%; }
   .rail-avatar:hover{ background-color:var(--navy-600); }
   .back-btn{ display:none; background:none; border:none; color:var(--ink-soft); font-size:22px; line-height:1; cursor:pointer; padding:4px 8px 4px 0; }
@@ -98,13 +100,13 @@
   .list-row:hover{ background:var(--paper); }
   .list-row.active{ background:var(--gold-tint); border-color:#E6CD8E; }
   .row-avatar{
-    width:34px; height:34px; border-radius:50%; background:var(--navy-950); color:var(--gold); flex-shrink:0;
+    width:34px; height:34px; border-radius:50%; background:var(--navy-950); color:#fff; flex-shrink:0;
     display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; font-family:'IBM Plex Mono', monospace;
     background-size:cover; background-position:center;
   }
   .row-avatar.chat{ background-color:var(--gold-tint); color:var(--gold-dark); }
   .row-avatar.chat svg{ width:16px; height:16px; }
-  .row-avatar.closed{ background-color:var(--ink-faint); color:#fff; }
+  .row-avatar.closed{ filter:grayscale(0.5); opacity:0.7; }
   .row-main{ flex:1; min-width:0; }
   .row-top{ display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
   .row-title{ font-weight:700; font-size:13px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -159,11 +161,10 @@
   .msg-row{ display:flex; gap:10px; padding:9px 4px; border-bottom:1px dashed var(--paper-line); }
   .msg-row:last-child{ border-bottom:none; }
   .msg-avatar{
-    width:28px; height:28px; border-radius:50%; background:var(--navy-950); color:var(--gold);
+    width:28px; height:28px; border-radius:50%; background:var(--navy-950); color:#fff;
     display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; flex-shrink:0; font-family:'IBM Plex Mono', monospace;
     background-size:cover; background-position:center;
   }
-  .msg-row.mine .msg-avatar{ background-color:var(--red); color:#fff; }
   .msg-body{ flex:1; min-width:0; }
   .msg-head{ display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; }
   .msg-name{ font-weight:700; font-size:12.5px; color:var(--ink); }
@@ -216,10 +217,43 @@
     cursor:pointer; animation:toastIn 0.25s ease;
   }
   .toast-notif strong{ color:var(--gold); }
+  .toast-notif em{ font-style:normal; color:#B9C2D6; }
   .toast-sub{ display:block; color:#B9C2D6; font-size:11.5px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   @keyframes toastIn{ from{ opacity:0; transform:translateY(-8px);} to{ opacity:1; transform:translateY(0);} }
   @media (prefers-reduced-motion: reduce){ .toast-notif{ animation:none; } }
-  .rail-btn#notifToggleBtn.on{ color:var(--gold); }
+
+  /* ---------- 매뉴얼 게시판 (관공서 스타일) ---------- */
+  .manual-page{ background:#fff; height:100%; overflow-y:auto; -webkit-overflow-scrolling:touch; color:#22262E; }
+  .manual-hero{ text-align:center; padding:34px 20px 20px; border-bottom:3px solid #1B4A9C; background:linear-gradient(180deg,#F6F8FB,#fff); }
+  .manual-taegeuk{ width:50px; height:50px; margin:0 auto 8px; display:block; }
+  .manual-title{ font-family:'East Sea Dokdo', cursive; font-size:38px; margin:0; color:#1B2A4A; letter-spacing:1px; line-height:1; }
+  .manual-subtitle{ margin:8px 0 0; font-size:11.5px; color:#7A8290; letter-spacing:2.5px; font-family:'IBM Plex Mono', monospace; }
+  .manual-toolbar{ display:flex; gap:10px; align-items:center; padding:16px 24px; border-bottom:1px solid #E4E7EC; flex-wrap:wrap; }
+  .manual-search{ flex:1; min-width:220px; display:flex; border:1px solid #C7CDD6; border-radius:4px; overflow:hidden; }
+  .manual-search input{ flex:1; min-width:0; border:none; padding:9px 12px; font-size:13px; font-family:'Pretendard',sans-serif; color:#22262E; }
+  .manual-search input:focus-visible{ outline:none; }
+  .manual-search button{ background:#1B4A9C; color:#fff; border:none; padding:0 16px; font-weight:700; font-size:12.5px; cursor:pointer; font-family:'Pretendard',sans-serif; }
+  .manual-search button:hover{ background:#153B7C; }
+  .manual-meta{ padding:12px 24px 0; font-size:11.5px; color:#7A8290; font-family:'IBM Plex Mono', monospace; }
+  .manual-new-btn{ background:#1B4A9C; color:#fff; }
+  .manual-new-btn:hover{ background:#153B7C; }
+  .manual-table{ width:100%; border-collapse:collapse; margin-top:6px; }
+  .manual-table thead th{ text-align:left; font-size:11px; color:#7A8290; font-weight:700; padding:10px 24px; border-bottom:2px solid #1B4A9C; background:#F6F8FB; white-space:nowrap; }
+  .manual-row td{ padding:14px 24px; border-bottom:1px solid #EEF0F3; cursor:pointer; vertical-align:top; }
+  .manual-row:hover td{ background:#F5F8FC; }
+  .manual-regno{ font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:#1B4A9C; font-weight:700; white-space:nowrap; }
+  .manual-row-title{ font-weight:700; font-size:14px; color:#1B2A4A; margin:0 0 3px; }
+  .manual-row-snippet{ font-size:12px; color:#7A8290; max-width:420px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .manual-row-date{ font-size:11.5px; color:#9AA3B0; font-family:'IBM Plex Mono', monospace; text-align:right; white-space:nowrap; }
+  .manual-detail{ padding:30px 28px 48px; max-width:760px; margin:0 auto; }
+  .manual-back{ background:none; border:none; color:#1B4A9C; font-weight:700; font-size:12.5px; cursor:pointer; padding:0; margin-bottom:20px; font-family:'Pretendard',sans-serif; }
+  .manual-back:hover{ text-decoration:underline; }
+  .manual-detail-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; border-bottom:2px solid #1B4A9C; padding-bottom:12px; margin-bottom:14px; }
+  .manual-detail-title{ font-size:21px; font-weight:800; color:#1B2A4A; margin:0; }
+  .manual-detail-meta{ font-size:12px; color:#7A8290; margin:0 0 22px; font-family:'IBM Plex Mono', monospace; }
+  .manual-detail-content{ font-size:14px; line-height:1.8; color:#28303D; white-space:pre-wrap; word-break:break-word; }
+  .manual-detail-actions{ margin-top:26px; padding-top:16px; border-top:1px solid #EEF0F3; }
+  .manual-page .empty{ padding:40px 12px; }
 
   /* ---------- Mobile ---------- */
   @media (max-width:860px){
@@ -238,6 +272,12 @@
     .detail-scroll, #detailPanel > .chat-scroll{ padding-left:14px; padding-right:14px; }
     .chat-compose, .detail-header{ padding-left:14px; padding-right:14px; }
     .replying-banner{ margin-left:14px; margin-right:14px; }
+    .manual-hero{ padding:26px 14px 16px; }
+    .manual-title{ font-size:32px; }
+    .manual-toolbar{ padding:14px; }
+    .manual-table thead th, .manual-row td{ padding:12px 14px; }
+    .manual-row-snippet{ max-width:180px; }
+    .manual-detail{ padding:20px 16px 40px; }
   }
 </style>
 </head>
@@ -275,8 +315,11 @@
       <button class="rail-btn" data-mode="recruit" title="재난 대응 인원 모집" id="railRecruitBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4a1 1 0 0 0 1 1h3l5 4V5L7 9H4a1 1 0 0 0-1 1z"/><path d="M16 8.5a4 4 0 0 1 0 7"/></svg>
       </button>
+      <button class="rail-btn" data-mode="manual" title="매뉴얼" id="railManualBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </button>
       <div class="rail-spacer"></div>
-      <button class="rail-btn" id="notifToggleBtn" title="내 공고 댓글 알림">
+      <button class="rail-btn" id="notifToggleBtn" title="알림 켜기/끄기">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       </button>
       <button class="rail-btn rail-admin" id="adminToggleBtn" title="관리자">
@@ -325,7 +368,7 @@ const CHAT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const RECRUIT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4a1 1 0 0 0 1 1h3l5 4V5L7 9H4a1 1 0 0 0-1 1z"/><path d="M16 8.5a4 4 0 0 1 0 7"/></svg>';
 
 let isAdmin = false;
-let db = null, messagesCol = null, recruitsCol = null, agentsCol = null;
+let db = null, messagesCol = null, recruitsCol = null, agentsCol = null, manualsCol = null;
 let currentMode = 'chat';
 let selectedChannelId = CHANNELS[0].id;
 let allMessages = [];
@@ -333,11 +376,17 @@ let lastRecruits = [];
 let selectedRecruitId = null;
 let currentReplies = [];
 let unsubscribeReplies = null;
+let lastManuals = [];
+let selectedManualId = null;
+let manualSearchQuery = '';
 let agentProfiles = {};
 let pendingPhotoURL = null;
 let replyingTo = null;
 const notifBootTime = new Date().toISOString();
 let notifPermission = (typeof Notification !== 'undefined') ? Notification.permission : 'unsupported';
+let notifEnabled = localStorage.getItem('db_notif_enabled') !== null
+  ? localStorage.getItem('db_notif_enabled') === '1'
+  : (notifPermission === 'granted');
 
 const el = (id) => document.getElementById(id);
 const isConfigured = firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('YOUR_');
@@ -363,10 +412,16 @@ function showToastError(msg){ alert(msg || '문제가 생겼어요. 인터넷 �
 function initials(name){ return (name || '?').trim().slice(0,2); }
 function pad4(n){ return String(n).padStart(4,'0'); }
 
+function avatarColor(id){
+  let hash = 0;
+  const s = String(id || '?');
+  for(let i = 0; i < s.length; i++){ hash = (hash * 31 + s.charCodeAt(i)) >>> 0; }
+  return `hsl(${hash % 360}, 55%, 38%)`;
+}
 function avatarStyle(authorId){
   const p = agentProfiles[authorId];
   if(p && p.photoURL) return `background-image:url('${p.photoURL}');`;
-  return '';
+  return `background-color:${avatarColor(authorId)};`;
 }
 function avatarInner(authorId, authorName){
   const p = agentProfiles[authorId];
@@ -406,9 +461,11 @@ function updateAgentBar(){
   const btn = el('profileBtn');
   if(myProfile && myProfile.photoURL){
     btn.style.backgroundImage = `url('${myProfile.photoURL}')`;
+    btn.style.backgroundColor = '';
     el('railAvatarText').textContent = '';
   }else{
     btn.style.backgroundImage = '';
+    btn.style.backgroundColor = avatarColor(myAgentId);
     el('railAvatarText').textContent = (myProfile && myProfile.name) ? initials(myProfile.name) : '?';
   }
 }
@@ -426,7 +483,7 @@ setInterval(tickClock, 1000);
 el('profileBtn').addEventListener('click', openProfileModal);
 function openProfileModal(){
   pendingPhotoURL = (myProfile && myProfile.photoURL) || null;
-  const previewStyle = pendingPhotoURL ? `background-image:url('${pendingPhotoURL}');` : '';
+  const previewStyle = pendingPhotoURL ? `background-image:url('${pendingPhotoURL}');` : `background-color:${avatarColor(myAgentId)};`;
   const previewText = pendingPhotoURL ? '' : ((myProfile && myProfile.name) ? initials(myProfile.name) : '?');
   openModal(`
     <h3>요원 등록 / 프로필</h3>
@@ -467,6 +524,7 @@ function openProfileModal(){
     pendingPhotoURL = null;
     const prev = el('photoPreview');
     prev.style.backgroundImage = '';
+    prev.style.backgroundColor = avatarColor(myAgentId);
     const nm = el('profNameInput').value.trim();
     prev.textContent = nm ? initials(nm) : '?';
     el('photoRemoveBtn').style.display = 'none';
@@ -498,42 +556,44 @@ function closeModal(){ el('overlay').hidden = true; el('modalBody').innerHTML = 
 el('overlay').addEventListener('click', (e) => { if(e.target.id === 'overlay') closeModal(); });
 document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeModal(); });
 
-/* ---------- 내 공고 댓글 알림 ---------- */
-if(notifPermission === 'granted') el('notifToggleBtn').classList.add('on');
+/* ---------- 알림 ---------- */
+if(notifEnabled) el('notifToggleBtn').classList.add('on');
 el('notifToggleBtn').addEventListener('click', async () => {
-  if(typeof Notification === 'undefined'){ alert('이 브라우저는 알림 기능을 지원하지 않습니다.'); return; }
-  if(Notification.permission === 'granted'){
-    alert('이미 알림이 켜져 있습니다. 이 페이지를 열어둔 동안, 내가 쓴 공고에 댓글이 달리면 알려드려요.');
-    return;
+  notifEnabled = !notifEnabled;
+  localStorage.setItem('db_notif_enabled', notifEnabled ? '1' : '0');
+  el('notifToggleBtn').classList.toggle('on', notifEnabled);
+  if(notifEnabled && typeof Notification !== 'undefined' && Notification.permission === 'default'){
+    notifPermission = await Notification.requestPermission();
   }
-  if(Notification.permission === 'denied'){
-    alert('브라우저에서 알림이 차단되어 있습니다. 브라우저 주소창 옆 사이트 설정에서 알림을 허용해주세요.');
-    return;
-  }
-  const perm = await Notification.requestPermission();
-  notifPermission = perm;
-  el('notifToggleBtn').classList.toggle('on', perm === 'granted');
-  if(perm === 'granted') alert('알림이 켜졌습니다. 이 페이지를 열어둔 동안(백그라운드 탭 포함) 내 공고에 새 댓글이 달리면 알려드려요.');
 });
-function showCommentNotification(r, rep, recruitId){
+function showToast(html, osTitle, osBody, onClick){
+  if(!notifEnabled) return;
   const stack = el('toastStack');
   const toast = document.createElement('div');
   toast.className = 'toast-notif';
-  toast.innerHTML = `<strong>${escapeHtml(rep.authorName)}</strong>님이 "${escapeHtml(r.title)}"에 댓글을 남겼습니다<span class="toast-sub">${escapeHtml(rep.text)}</span>`;
-  toast.addEventListener('click', () => {
-    setMode('recruit');
-    selectRecruit(recruitId);
-    toast.remove();
-  });
+  toast.innerHTML = html;
+  toast.addEventListener('click', () => { if(onClick) onClick(); toast.remove(); });
   stack.appendChild(toast);
   setTimeout(() => toast.remove(), 6000);
-
   if(notifPermission === 'granted' && document.visibilityState === 'hidden'){
     try{
-      const n = new Notification('새 댓글 · ' + r.title, { body: rep.authorName + ': ' + rep.text });
-      n.onclick = () => { window.focus(); setMode('recruit'); selectRecruit(recruitId); };
+      const n = new Notification(osTitle, { body: osBody });
+      n.onclick = () => { window.focus(); if(onClick) onClick(); };
     }catch(e){}
   }
+}
+function notifyRecruitComment(r, rep, recruitId, isReplyToMe){
+  const html = isReplyToMe
+    ? `<strong>${escapeHtml(rep.authorName)}</strong>님이 내 댓글에 답글을 남겼습니다<span class="toast-sub">${escapeHtml(rep.text)}</span>`
+    : `<strong>${escapeHtml(rep.authorName)}</strong>님이 "${escapeHtml(r.title)}"에 댓글을 남겼습니다<span class="toast-sub">${escapeHtml(rep.text)}</span>`;
+  const osTitle = isReplyToMe ? '새 답글' : ('새 댓글 · ' + r.title);
+  showToast(html, osTitle, rep.authorName + ': ' + rep.text, () => { setMode('recruit'); selectRecruit(recruitId); });
+}
+function notifyChannelMessage(m, chId){
+  const ch = CHANNELS.find(c => c.id === chId);
+  const chName = ch ? ch.name : '채널';
+  const html = `<strong>${escapeHtml(m.authorName)}</strong>님이 <em>${escapeHtml(chName)}</em>에 메시지를 보냈습니다<span class="toast-sub">${escapeHtml(m.text)}</span>`;
+  showToast(html, chName, m.authorName + ': ' + m.text, () => { setMode('chat'); selectChannel(chId); });
 }
 
 el('adminToggleBtn').addEventListener('click', () => {
@@ -575,18 +635,23 @@ document.querySelectorAll('.rail-btn[data-mode]').forEach(btn => {
 function setMode(mode){
   currentMode = mode;
   document.querySelectorAll('.rail-btn[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  el('workspace').classList.toggle('manual-mode', mode === 'manual');
   renderListPanel();
   renderDetailPanel();
-  showMobileList();
+  if(mode === 'manual') showMobileDetail(); else showMobileList();
 }
 function showMobileDetail(){ el('workspace').classList.add('detail-active'); }
 function showMobileList(){ el('workspace').classList.remove('detail-active'); }
 
 function renderListPanel(){
-  if(currentMode === 'chat') renderChatList(); else renderRecruitListPanel();
+  if(currentMode === 'chat') renderChatList();
+  else if(currentMode === 'recruit') renderRecruitListPanel();
+  else el('listPanel').innerHTML = '';
 }
 function renderDetailPanel(){
-  if(currentMode === 'chat') renderChatDetail(); else renderRecruitDetailPanel();
+  if(currentMode === 'chat') renderChatDetail();
+  else if(currentMode === 'recruit') renderRecruitDetailPanel();
+  else renderManualPage();
 }
 
 /* ---------- 채널 (공용 채팅) ---------- */
@@ -773,7 +838,7 @@ function commentRowHtml(rep){
         <div class="msg-head"><span class="msg-name">${displayName(rep.authorId, rep.authorName)}</span><span class="msg-time">${formatTime(rep.sentAt)}</span></div>
         ${rep.replyToName ? `<div class="reply-to-tag">↳ ${escapeHtml(rep.replyToName)}님에게 답글</div>` : ''}
         <p class="msg-text">${escapeHtml(rep.text)}</p>
-        <button type="button" class="reply-link" data-reply-id="${rep.id}" data-reply-name="${escapeHtml(rep.authorName)}">답글</button>${isAdmin ? `<button type="button" class="reply-link" data-del-reply="${rep.id}">삭제</button>` : ''}
+        <button type="button" class="reply-link" data-reply-id="${rep.id}" data-reply-name="${escapeHtml(rep.authorName)}" data-reply-author="${escapeHtml(rep.authorId)}">답글</button>${isAdmin ? `<button type="button" class="reply-link" data-del-reply="${rep.id}">삭제</button>` : ''}
       </div>
     </div>`;
 }
@@ -835,7 +900,7 @@ function renderRecruitDetailPanel(){
   panel.querySelectorAll('[data-reply-id]').forEach(btn => {
     btn.addEventListener('click', () => {
       if(!requireProfile()) return;
-      replyingTo = { id: btn.dataset.replyId, name: btn.dataset.replyName };
+      replyingTo = { id: btn.dataset.replyId, name: btn.dataset.replyName, authorId: btn.dataset.replyAuthor };
       renderDetailPanel();
       const input = el('replyInput'); if(input) input.focus();
     });
@@ -854,7 +919,11 @@ function renderRecruitDetailPanel(){
     const text = input.value.trim();
     if(!text) return;
     const payload = { authorId: myAgentId, authorName: myProfile.name, text, sentAt: new Date().toISOString() };
-    if(replyingTo){ payload.replyToId = replyingTo.id; payload.replyToName = replyingTo.name; }
+    if(replyingTo){
+      payload.replyToId = replyingTo.id;
+      payload.replyToName = replyingTo.name;
+      if(replyingTo.authorId) payload.replyToAuthorId = replyingTo.authorId;
+    }
     input.value = '';
     replyingTo = null;
     renderDetailPanel();
@@ -863,6 +932,124 @@ function renderRecruitDetailPanel(){
   };
   el('replySendBtn').addEventListener('click', send);
   el('replyInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') send(); });
+}
+
+/* ---------- 매뉴얼 게시판 ---------- */
+const TAEGEUK_SVG = `<svg class="manual-taegeuk" viewBox="0 0 100 100" aria-hidden="true">
+  <circle cx="50" cy="50" r="50" fill="#1B4A9C"/>
+  <path d="M50,0 A50,50 0 0,1 50,100 A25,25 0 0,1 50,50 A25,25 0 0,0 50,0 Z" fill="#C23B3B"/>
+  <circle cx="50" cy="25" r="25" fill="#C23B3B"/>
+  <circle cx="50" cy="75" r="25" fill="#1B4A9C"/>
+</svg>`;
+function renderManualPage(){
+  if(selectedManualId) renderManualDetail(); else renderManualList();
+}
+function renderManualList(){
+  const panel = el('detailPanel');
+  panel.innerHTML = `
+    <div class="manual-page">
+      <div class="manual-hero">
+        ${TAEGEUK_SVG}
+        <h2 class="manual-title">초자연재난관리국</h2>
+        <p class="manual-subtitle">재난 대응 매뉴얼 게시판</p>
+      </div>
+      <div class="manual-toolbar">
+        <div class="manual-search">
+          <input type="text" id="manualSearchInput" placeholder="재난 이름 또는 내용으로 검색">
+          <button type="button" id="manualSearchBtn">검색</button>
+        </div>
+        <button class="btn manual-new-btn btn-small" id="newManualBtn">+ 매뉴얼 등록</button>
+      </div>
+      <div class="manual-meta" id="manualMeta"></div>
+      <div id="manualTableWrap"></div>
+    </div>
+  `;
+  el('manualSearchInput').value = manualSearchQuery;
+  el('newManualBtn').addEventListener('click', () => { if(!requireProfile()) return; openManualFormModal(); });
+  el('manualSearchBtn').addEventListener('click', () => { manualSearchQuery = el('manualSearchInput').value; renderManualResults(); });
+  el('manualSearchInput').addEventListener('input', () => { manualSearchQuery = el('manualSearchInput').value; renderManualResults(); });
+  el('manualSearchInput').addEventListener('keydown', (e) => { if(e.key === 'Enter'){ manualSearchQuery = el('manualSearchInput').value; renderManualResults(); } });
+  renderManualResults();
+}
+function renderManualResults(){
+  const wrap = el('manualTableWrap');
+  const meta = el('manualMeta');
+  if(!wrap || !meta) return;
+  const q = manualSearchQuery.trim().toLowerCase();
+  const filtered = lastManuals.filter(m => !q || m.disasterName.toLowerCase().includes(q) || m.content.toLowerCase().includes(q));
+  meta.textContent = `전체 ${filtered.length}건` + (q ? ` (검색: "${manualSearchQuery.trim()}")` : '');
+  if(filtered.length === 0){
+    wrap.innerHTML = `<div class="empty">${lastManuals.length === 0 ? '등록된 매뉴얼이 없습니다.' : '검색 결과가 없습니다.'}</div>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <table class="manual-table">
+      <thead><tr><th style="width:100px;">등록번호</th><th>재난 이름</th><th style="width:110px; text-align:right;">등록일</th></tr></thead>
+      <tbody>
+        ${filtered.map(m => `
+          <tr class="manual-row" data-id="${m.id}">
+            <td class="manual-regno">${escapeHtml(m.regNo)}</td>
+            <td><div class="manual-row-title">${escapeHtml(m.disasterName)}</div><div class="manual-row-snippet">${escapeHtml(m.content)}</div></td>
+            <td class="manual-row-date">${formatTime(m.createdAt)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>`;
+  wrap.querySelectorAll('.manual-row').forEach(row => {
+    row.addEventListener('click', () => { selectedManualId = row.dataset.id; renderManualPage(); });
+  });
+}
+function renderManualDetail(){
+  const m = lastManuals.find(x => x.id === selectedManualId);
+  const panel = el('detailPanel');
+  if(!m){ selectedManualId = null; renderManualList(); return; }
+  const canManage = isAdmin || m.authorId === myAgentId;
+  panel.innerHTML = `
+    <div class="manual-page">
+      <div class="manual-detail">
+        <button type="button" class="manual-back" id="manualBackBtn">‹ 목록으로</button>
+        <div class="manual-detail-top">
+          <h2 class="manual-detail-title">${escapeHtml(m.disasterName)}</h2>
+          <span class="manual-regno">${escapeHtml(m.regNo)}</span>
+        </div>
+        <p class="manual-detail-meta">${displayName(m.authorId, m.authorName)} · ${formatTime(m.createdAt)}</p>
+        <div class="manual-detail-content">${escapeHtml(m.content)}</div>
+        ${canManage ? `<div class="manual-detail-actions"><button class="btn btn-ghost btn-small" id="manualDeleteBtn">삭제</button></div>` : ''}
+      </div>
+    </div>
+  `;
+  el('manualBackBtn').addEventListener('click', () => { selectedManualId = null; renderManualPage(); });
+  const delBtn = el('manualDeleteBtn');
+  if(delBtn) delBtn.addEventListener('click', async () => {
+    try{ await deleteDoc(doc(manualsCol, m.id)); selectedManualId = null; renderManualPage(); }
+    catch(e){ showToastError(); }
+  });
+}
+function openManualFormModal(){
+  openModal(`
+    <h3>매뉴얼 등록</h3>
+    <p class="hint">등록번호를 직접 입력해주세요.</p>
+    <div class="field"><label for="mRegNoInput">등록번호</label><input type="text" id="mRegNoInput" maxlength="30" placeholder="예: 제7호"></div>
+    <div class="field"><label for="mDisasterInput">재난 이름</label><input type="text" id="mDisasterInput" maxlength="60"></div>
+    <div class="field"><label for="mContentInput">매뉴얼 내용</label><textarea id="mContentInput" maxlength="2000"></textarea></div>
+    <p class="error-msg" id="mError"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="mCancel">취소</button>
+      <button class="btn btn-primary" id="mSubmit">등록</button>
+    </div>
+  `);
+  el('mRegNoInput').focus();
+  el('mSubmit').addEventListener('click', async () => {
+    const regNo = el('mRegNoInput').value.trim();
+    const disasterName = el('mDisasterInput').value.trim();
+    const content = el('mContentInput').value.trim();
+    if(!regNo || !disasterName || !content){ el('mError').textContent = '등록번호, 재난 이름, 매뉴얼 내용을 모두 입력해주세요.'; return; }
+    try{
+      await addDoc(manualsCol, { regNo, disasterName, content, authorId: myAgentId, authorName: myProfile.name, createdAt: new Date().toISOString() });
+      closeModal();
+    }catch(e){ el('mError').textContent = '등록 중 문제가 생겼습니다. 다시 시도해주세요.'; }
+  });
+  el('mCancel').addEventListener('click', closeModal);
 }
 
 function boot(){
@@ -878,6 +1065,7 @@ function boot(){
   messagesCol = collection(db, 'messages');
   recruitsCol = collection(db, 'recruits');
   agentsCol = collection(db, 'agents');
+  manualsCol = collection(db, 'manuals');
 
   onSnapshot(agentsCol, (snap) => {
     const map = {};
@@ -890,6 +1078,16 @@ function boot(){
   onSnapshot(query(messagesCol, orderBy('sentAt', 'desc'), limit(400)), (snap) => {
     allMessages = snap.docs.map(d => ({ id: d.id, ...d.data() })).reverse();
     if(currentMode === 'chat'){ renderChannelRows(); renderChatBubbles(messagesForChannel(selectedChannelId)); }
+    snap.docChanges().forEach((change) => {
+      if(change.type !== 'added') return;
+      const m = change.doc.data();
+      if(!m.sentAt || m.sentAt <= notifBootTime) return;
+      if(m.authorId === myAgentId) return;
+      const chId = m.channelId || 'notice';
+      const viewingThisChannel = currentMode === 'chat' && selectedChannelId === chId && document.visibilityState === 'visible';
+      if(viewingThisChannel) return;
+      notifyChannelMessage(m, chId);
+    });
   }, (err) => { console.error(err); const wrap = document.getElementById('chatScroll'); if(wrap) wrap.innerHTML = `<div class="empty">⚠️ 채널을 불러오지 못했습니다.</div>`; });
 
   onSnapshot(query(recruitsCol, orderBy('createdAt', 'desc'), limit(100)), (snap) => {
@@ -900,6 +1098,13 @@ function boot(){
     if(selectedRecruitId) renderDetailPanel();
   }, (err) => { console.error(err); const body = document.getElementById('recruitListBody'); if(body) body.innerHTML = `<div class="empty">⚠️ 공고를 불러오지 못했습니다.</div>`; });
 
+  onSnapshot(query(manualsCol, orderBy('createdAt', 'desc'), limit(300)), (snap) => {
+    const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    docs.forEach((m) => { if(!m.regNo) m.regNo = '—'; });
+    lastManuals = docs;
+    if(currentMode === 'manual') renderManualPage();
+  }, (err) => console.error(err));
+
   onSnapshot(query(collectionGroup(db, 'replies'), orderBy('sentAt', 'desc'), limit(50)), (snap) => {
     snap.docChanges().forEach((change) => {
       if(change.type !== 'added') return;
@@ -908,8 +1113,10 @@ function boot(){
       if(rep.authorId === myAgentId) return;
       const recruitId = change.doc.ref.parent.parent.id;
       const r = lastRecruits.find(x => x.id === recruitId);
-      if(!r || r.authorId !== myAgentId) return;
-      showCommentNotification(r, rep, recruitId);
+      const isReplyToMe = rep.replyToAuthorId === myAgentId;
+      const isOwnPost = !!r && r.authorId === myAgentId;
+      if(!r || (!isOwnPost && !isReplyToMe)) return;
+      notifyRecruitComment(r, rep, recruitId, isReplyToMe && !isOwnPost);
     });
   }, (err) => console.error(err));
 }
