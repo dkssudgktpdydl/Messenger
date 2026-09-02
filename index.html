@@ -294,14 +294,16 @@
   .modal-manual .btn-primary{ background:#1B4A9C; }
   .modal-manual .btn-primary:hover{ background:#153B7C; }
 
-  /* 매뉴얼 본문 서식 에디터 (볼드/이탤릭/이미지 삽입) */
-  .editor-toolbar{ display:flex; gap:6px; margin-bottom:6px; }
+  /* 매뉴얼 본문 서식 에디터 (볼드/이탤릭/정렬/글자색/이미지 삽입) */
+  .editor-toolbar{ display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
   .editor-btn{
     min-width:30px; height:28px; padding:0 9px; border:1px solid var(--line-strong); background:#F9FAFC; border-radius:3px;
     cursor:pointer; font-size:12.5px; color:var(--ink); display:flex; align-items:center; justify-content:center; gap:4px;
     font-family:'Pretendard', sans-serif;
   }
+  .editor-btn svg{ width:16px; height:16px; }
   .editor-btn:hover{ background:var(--gov-blue-tint); border-color:var(--gov-blue); color:var(--gov-blue); }
+  input.editor-color{ min-width:30px; width:34px; padding:2px; }
   .content-editable{
     width:100%; min-height:160px; max-height:360px; overflow-y:auto; font-family:'Pretendard', sans-serif;
     background:#F9FAFC; border:1px solid var(--line-strong); border-radius:3px; padding:9px 11px; font-size:13.5px; color:var(--ink); line-height:1.6;
@@ -553,7 +555,22 @@ function resizeImageToDataURLFit(file, maxWidth){
     reader.readAsDataURL(file);
   });
 }
-const MANUAL_ALLOWED_TAGS = new Set(['B','STRONG','I','EM','U','BR','DIV','P','IMG']);
+const MANUAL_ALLOWED_TAGS = new Set(['B','STRONG','I','EM','U','BR','DIV','P','IMG','SPAN','FONT']);
+function sanitizeManualStyle(styleStr){
+  if(!styleStr) return '';
+  const out = [];
+  styleStr.split(';').forEach((decl) => {
+    const m = decl.match(/^\s*(text-align|color)\s*:\s*([^;]+?)\s*$/i);
+    if(!m) return;
+    const prop = m[1].toLowerCase();
+    const val = m[2].trim();
+    if(/url\(|expression|javascript:/i.test(val)) return;
+    if(prop === 'text-align' && !/^(left|right|center|justify)$/i.test(val)) return;
+    if(prop === 'color' && !/^(#[0-9a-f]{3,8}|rgba?\([\d.,\s%]+\)|[a-z]+)$/i.test(val)) return;
+    out.push(`${prop}: ${val}`);
+  });
+  return out.join('; ');
+}
 function sanitizeManualHtml(html){
   const wrap = document.createElement('div');
   wrap.innerHTML = html || '';
@@ -567,6 +584,12 @@ function sanitizeManualHtml(html){
         }
         Array.from(child.attributes).forEach((attr) => {
           if(child.tagName === 'IMG' && attr.name === 'src' && /^data:image\//i.test(attr.value)) return;
+          if(attr.name === 'style'){
+            const cleaned = sanitizeManualStyle(attr.value);
+            if(cleaned) child.setAttribute('style', cleaned); else child.removeAttribute('style');
+            return;
+          }
+          if(child.tagName === 'FONT' && attr.name === 'color' && /^#?[0-9a-f]{3,8}$/i.test(attr.value)) return;
           child.removeAttribute(attr.name);
         });
         walk(child);
@@ -579,7 +602,7 @@ function sanitizeManualHtml(html){
   return wrap.innerHTML;
 }
 function renderManualContent(content){
-  const looksHtml = /<\/?(b|strong|i|em|u|br|div|p|img)\b/i.test(content || '');
+  const looksHtml = /<\/?(b|strong|i|em|u|br|div|p|img|span|font)\b/i.test(content || '');
   return looksHtml ? sanitizeManualHtml(content) : escapeHtml(content);
 }
 
@@ -822,7 +845,6 @@ function selectChannel(id){
 function openRoomPasswordModal(ch){
   openModal(`
     <h3>${escapeHtml(ch.name)}</h3>
-    <p class="hint">비밀번호를 입력하면 이 기기에서는 다음부터 바로 입장할 수 있어요.</p>
     <div class="field"><label for="roomPwInput">비밀번호</label><input type="password" id="roomPwInput" autocomplete="off"></div>
     <p class="error-msg" id="roomPwError"></p>
     <div class="modal-actions">
@@ -1261,6 +1283,10 @@ function openManualFormModal(existing){
       <div class="editor-toolbar">
         <button type="button" class="editor-btn" data-cmd="bold" title="굵게"><b>B</b></button>
         <button type="button" class="editor-btn" data-cmd="italic" title="기울임"><i>I</i></button>
+        <button type="button" class="editor-btn" data-cmd="justifyLeft" title="왼쪽 정렬"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="18" y2="18"/></svg></button>
+        <button type="button" class="editor-btn" data-cmd="justifyCenter" title="가운데 정렬"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="6" y1="18" x2="18" y2="18"/></svg></button>
+        <button type="button" class="editor-btn" data-cmd="justifyRight" title="오른쪽 정렬"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="10" y1="12" x2="20" y2="12"/><line x1="6" y1="18" x2="20" y2="18"/></svg></button>
+        <input type="color" class="editor-btn editor-color" id="mColorInput" title="글자색" value="#1B2A4A">
         <button type="button" class="editor-btn" id="mInsertImageBtn" title="사진 삽입">🖼 사진 삽입</button>
         <input type="file" id="mImageInput" accept="image/*" style="display:none">
       </div>
@@ -1279,6 +1305,24 @@ function openManualFormModal(existing){
       document.execCommand(btn.dataset.cmd, false, null);
       el('mContentEditor').focus();
     });
+  });
+  let savedRange = null;
+  const colorInput = el('mColorInput');
+  colorInput.addEventListener('mousedown', () => {
+    const sel = window.getSelection();
+    if(sel.rangeCount > 0){
+      const r = sel.getRangeAt(0);
+      if(el('mContentEditor').contains(r.commonAncestorContainer)) savedRange = r.cloneRange();
+    }
+  });
+  colorInput.addEventListener('input', (e) => {
+    if(savedRange){
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedRange);
+    }
+    el('mContentEditor').focus();
+    document.execCommand('foreColor', false, e.target.value);
   });
   const imageBtn = el('mInsertImageBtn');
   imageBtn.addEventListener('mousedown', (e) => e.preventDefault());
