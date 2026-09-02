@@ -425,8 +425,23 @@ import {
 
 const CHANNELS = [
   { id: 'notice', name: '신규조사반 부서 알림', subtitle: '부서 공지 · 업무 알림' },
-  { id: 'casual', name: '담소방 ^_^', subtitle: '' }
+  { id: 'casual', name: '요원 토크토크 실명방', subtitle: '' },
+  { id: 'baekho1', name: '백호1팀', subtitle: '비공개 · 비밀번호 필요', password: '현무1팀파이팅' },
+  { id: 'baekho2', name: '백호2팀', subtitle: '비공개 · 비밀번호 필요', password: '현무2팀아자잣' },
+  { id: 'baekho3', name: '백호3팀', subtitle: '비공개 · 비밀번호 필요', password: '현무3팀드가자' }
 ];
+const LOCK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="9.5" rx="1.6"/><path d="M7.5 10.5V7a4.5 4.5 0 0 1 9 0v3.5"/></svg>';
+function getUnlockedRooms(){
+  try{ return JSON.parse(localStorage.getItem('db_unlocked_rooms') || '[]'); }catch(e){ return []; }
+}
+function markRoomUnlocked(id){
+  const set = new Set(getUnlockedRooms());
+  set.add(id);
+  localStorage.setItem('db_unlocked_rooms', JSON.stringify([...set]));
+}
+function isRoomLocked(ch){
+  return !!ch.password && !getUnlockedRooms().includes(ch.id);
+}
 const CHAT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.4 8.4H12a8.3 8.3 0 0 1-3.8-.9L3 21l1.9-5.7A8.3 8.3 0 0 1 4 11.5 8.4 8.4 0 0 1 12.4 3H12a8.4 8.4 0 0 1 8.4 8.4z"/></svg>';
 const RECRUIT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4a1 1 0 0 0 1 1h3l5 4V5L7 9H4a1 1 0 0 0-1 1z"/><path d="M16 8.5a4 4 0 0 1 0 7"/></svg>';
 
@@ -782,24 +797,53 @@ function renderChannelRows(){
   const body = el('channelListBody');
   if(!body) return;
   body.innerHTML = CHANNELS.map(c => {
-    const msgs = messagesForChannel(c.id);
+    const locked = isRoomLocked(c);
+    const msgs = locked ? [] : messagesForChannel(c.id);
     const last = msgs[msgs.length - 1];
     return `
     <div class="list-row ${c.id === selectedChannelId ? 'active' : ''}" data-channel="${c.id}">
-      <div class="row-avatar chat">${CHAT_ICON}</div>
+      <div class="row-avatar chat">${locked ? LOCK_ICON : CHAT_ICON}</div>
       <div class="row-main">
         <div class="row-top"><span class="row-title">${escapeHtml(c.name)}</span><span class="row-time">${last ? formatTime(last.sentAt) : ''}</span></div>
-        <div class="row-snippet">${last ? escapeHtml(last.authorName + ': ' + last.text) : '등록된 메시지가 없습니다.'}</div>
+        <div class="row-snippet">${locked ? '🔒 비밀번호를 입력하면 입장할 수 있습니다.' : (last ? escapeHtml(last.authorName + ': ' + last.text) : '등록된 메시지가 없습니다.')}</div>
       </div>
     </div>`;
   }).join('');
   body.querySelectorAll('[data-channel]').forEach(row => row.addEventListener('click', () => selectChannel(row.dataset.channel)));
 }
 function selectChannel(id){
+  const ch = CHANNELS.find(c => c.id === id);
+  if(ch && isRoomLocked(ch)){ openRoomPasswordModal(ch); return; }
   selectedChannelId = id;
   renderChannelRows();
   renderChatDetail();
   showMobileDetail();
+}
+function openRoomPasswordModal(ch){
+  openModal(`
+    <h3>${escapeHtml(ch.name)}</h3>
+    <p class="hint">비밀번호를 입력하면 이 기기에서는 다음부터 바로 입장할 수 있어요.</p>
+    <div class="field"><label for="roomPwInput">비밀번호</label><input type="password" id="roomPwInput" autocomplete="off"></div>
+    <p class="error-msg" id="roomPwError"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="roomPwCancel">취소</button>
+      <button class="btn btn-primary" id="roomPwSubmit">입장</button>
+    </div>
+  `);
+  const input = el('roomPwInput'); input.focus();
+  const submit = () => {
+    if(input.value === ch.password){
+      markRoomUnlocked(ch.id);
+      closeModal();
+      selectedChannelId = ch.id;
+      renderChannelRows();
+      renderChatDetail();
+      showMobileDetail();
+    }else{ el('roomPwError').textContent = '비밀번호가 맞지 않습니다.'; }
+  };
+  el('roomPwSubmit').addEventListener('click', submit);
+  input.addEventListener('keydown', (e) => { if(e.key === 'Enter') submit(); });
+  el('roomPwCancel').addEventListener('click', closeModal);
 }
 function bubbleHtml(m){
   const mine = m.authorId === myAgentId;
