@@ -35,7 +35,7 @@
   .brand{ display:flex; align-items:center; gap:11px; min-width:0; }
   .seal{ width:36px; height:36px; flex-shrink:0; color:var(--gov-blue); }
   .seal text{ font-family:'IBM Plex Mono', monospace; }
-  .brand-text h1{ font-family:'East Sea Dokdo', cursive; font-weight:400; font-size:23px; margin:0; color:#1B2A4A; letter-spacing:0.5px; }
+  .brand-text h1{ font-family:'Pretendard', sans-serif; font-weight:800; font-size:16.5px; margin:0; color:#1B2A4A; letter-spacing:0.1px; }
   .tagline{ margin:2px 0 0; font-size:9.5px; color:var(--ink-faint); font-family:'IBM Plex Mono', monospace; letter-spacing:1px; }
 
   .status-cluster{ text-align:right; flex-shrink:0; }
@@ -299,6 +299,7 @@
     .workspace{ flex-direction:column; position:relative; }
     .rail{ order:3; width:100%; min-height:56px; height:auto; flex-direction:row; padding:6px 10px calc(6px + env(safe-area-inset-bottom)); border-right:none; border-top:1px solid var(--line); gap:2px; }
     .rail-spacer{ display:none; }
+    .rail-admin{ margin-left:auto; }
     .list-panel{ order:1; width:100%; }
     .detail-panel{ order:2; width:100%; }
     .list-panel, .detail-panel{ display:none; flex:1; }
@@ -331,7 +332,10 @@
         <text font-size="8.6" fill="currentColor" letter-spacing="2">
           <textPath href="#sealRing" startOffset="4%">초자연재난관리국 · 신규조사반 · </textPath>
         </text>
-        <text x="50" y="58" text-anchor="middle" font-size="22" font-weight="700" fill="currentColor">災</text>
+        <circle cx="50" cy="50" r="33" fill="#1B4A9C"/>
+        <path d="M50,17 A33,33 0 0,1 50,83 A16.5,16.5 0 0,1 50,50 A16.5,16.5 0 0,0 50,17 Z" fill="#C23B3B"/>
+        <circle cx="50" cy="33.5" r="16.5" fill="#C23B3B"/>
+        <circle cx="50" cy="66.5" r="16.5" fill="#1B4A9C"/>
       </svg>
       <div class="brand-text">
         <h1>초자연재난관리국 신규조사반</h1>
