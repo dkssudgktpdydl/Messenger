@@ -138,6 +138,8 @@
   .btn-primary:hover{ background:var(--gov-blue-dark); }
   .btn-ghost{ background:none; color:var(--ink-soft); border:1px solid var(--line-strong); }
   .btn-ghost:hover{ color:var(--ink); border-color:var(--ink-soft); }
+  .btn-danger{ background:var(--gov-red); color:#fff; }
+  .btn-danger:hover{ background:#9C2E2E; }
   .btn-small{ padding:6px 10px; font-size:11px; }
   .btn:disabled{ background:#E9ECF1 !important; color:var(--ink-faint) !important; border-color:var(--line) !important; cursor:default; }
 
@@ -981,6 +983,7 @@ function renderChatDetail(){
         <h3>${escapeHtml(ch.name)}</h3>
         ${ch.subtitle ? `<p class="detail-sub">${escapeHtml(ch.subtitle)}</p>` : ''}
       </div>
+      ${isAdmin ? `<button class="btn btn-ghost btn-small" id="wipeChannelBtn">로그 삭제</button>` : ''}
     </div>
     <div class="chat-scroll" id="chatScroll"><div class="empty">불러오는 중…</div></div>
     <div class="chat-compose">
@@ -991,7 +994,34 @@ function renderChatDetail(){
   el('backBtn').addEventListener('click', showMobileList);
   el('chatSendBtn').addEventListener('click', sendChannelMessage);
   bindEnterToSend(el('chatInput'), sendChannelMessage);
+  const wipeBtn = el('wipeChannelBtn');
+  if(wipeBtn) wipeBtn.addEventListener('click', () => openWipeChannelModal(ch));
   if(currentChannelMessages.length > 0) renderChatBubbles(currentChannelMessages);
+}
+function openWipeChannelModal(ch){
+  openModal(`
+    <h3>대화 로그 삭제</h3>
+    <p class="hint">"${escapeHtml(ch.name)}" 채널의 모든 메시지를 삭제합니다. 이 작업은 되돌릴 수 없습니다.</p>
+    <p class="error-msg" id="wipeError"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="wipeCancel">취소</button>
+      <button class="btn btn-danger" id="wipeConfirm">전체 삭제</button>
+    </div>
+  `);
+  el('wipeCancel').addEventListener('click', closeModal);
+  el('wipeConfirm').addEventListener('click', async () => {
+    el('wipeConfirm').disabled = true;
+    el('wipeCancel').disabled = true;
+    try{
+      const snap = await getDocs(query(messagesCol, where('channelId', '==', ch.id)));
+      await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+      closeModal();
+    }catch(e){
+      el('wipeError').textContent = '삭제 중 문제가 생겼습니다. 다시 시도해주세요.';
+      el('wipeConfirm').disabled = false;
+      el('wipeCancel').disabled = false;
+    }
+  });
 }
 async function sendChannelMessage(){
   if(!requireProfile()) return;
