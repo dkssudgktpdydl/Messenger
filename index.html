@@ -422,7 +422,7 @@ const ADMIN_PASSWORD = "goguma1234";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import {
   getFirestore, collection, collectionGroup, doc, addDoc, updateDoc, deleteDoc, setDoc,
-  getDoc, getDocs, onSnapshot, query, where, orderBy, limit
+  getDoc, getDocs, onSnapshot, query, where, orderBy, limit, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const CHANNELS = [
@@ -492,7 +492,15 @@ function setLocalProfile(profile){ localStorage.setItem('db_agent_profile', JSON
 const myAgentId = getAgentId();
 let myProfile = getLocalProfile();
 
-function formatTime(iso){ return new Date(iso).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }); }
+function toJsDate(ts){
+  if(!ts) return new Date();
+  if(typeof ts.toDate === 'function') return ts.toDate();
+  return new Date(ts);
+}
+function formatTime(ts){
+  if(!ts) return '전송 중…';
+  return toJsDate(ts).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
 function escapeHtml(str){ const d=document.createElement('div'); d.textContent = str ?? ''; return d.innerHTML; }
 function isSubmitEnter(e){ return e.key === 'Enter' && !e.isComposing && e.keyCode !== 229; }
 function bindEnterToSend(inputEl, sendFn){
@@ -947,7 +955,9 @@ function subscribeChannelMessages(channelId){
   unsubscribeChannelMessages = onSnapshot(
     query(messagesCol, where('channelId', '==', channelId), orderBy('sentAt', 'desc'), limit(CHANNEL_MESSAGE_LIMIT)),
     (snap) => {
-      currentChannelMessages = snap.docs.map(d => ({ id: d.id, ...d.data() })).reverse();
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      docs.sort((a, b) => toJsDate(a.sentAt).getTime() - toJsDate(b.sentAt).getTime());
+      currentChannelMessages = docs;
       if(selectedChannelId === channelId) renderChatBubbles(currentChannelMessages);
     },
     (err) => {
@@ -989,7 +999,7 @@ async function sendChannelMessage(){
   const text = input.value.trim();
   if(!text) return;
   input.value = '';
-  try{ await addDoc(messagesCol, { channelId: selectedChannelId, authorId: myAgentId, authorName: myProfile.name, text, sentAt: new Date().toISOString() }); }
+  try{ await addDoc(messagesCol, { channelId: selectedChannelId, authorId: myAgentId, authorName: myProfile.name, text, sentAt: serverTimestamp() }); }
   catch(e){ showToastError(); }
 }
 
@@ -1456,7 +1466,7 @@ function boot(){
       snap.docChanges().forEach((change) => {
         if(change.type !== 'added') return;
         const m = change.doc.data();
-        if(!m.sentAt || m.sentAt <= notifBootTime) return;
+        if(!m.sentAt || toJsDate(m.sentAt).toISOString() <= notifBootTime) return;
         if(m.authorId === myAgentId) return;
         const viewingThisChannel = currentMode === 'chat' && selectedChannelId === ch.id && document.visibilityState === 'visible';
         if(viewingThisChannel) return;
