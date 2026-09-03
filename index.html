@@ -493,6 +493,7 @@ let myProfile = getLocalProfile();
 
 function formatTime(iso){ return new Date(iso).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }); }
 function escapeHtml(str){ const d=document.createElement('div'); d.textContent = str ?? ''; return d.innerHTML; }
+function isSubmitEnter(e){ return e.key === 'Enter' && !e.isComposing && e.keyCode !== 229; }
 function showToastError(msg){ alert(msg || '문제가 생겼어요. 인터넷 연결을 확인하고 다시 시도해주세요.'); }
 function pad4(n){ return String(n).padStart(4,'0'); }
 
@@ -774,7 +775,7 @@ el('adminToggleBtn').addEventListener('click', () => {
     }else{ el('pwError').textContent = '암호가 맞지 않습니다.'; }
   };
   el('pwSubmit').addEventListener('click', submit);
-  input.addEventListener('keydown', (e) => { if(e.key === 'Enter') submit(); });
+  input.addEventListener('keydown', (e) => { if(isSubmitEnter(e)) submit(); });
   el('pwCancel').addEventListener('click', closeModal);
 });
 
@@ -867,7 +868,7 @@ function openRoomPasswordModal(ch){
     }else{ el('roomPwError').textContent = '비밀번호가 맞지 않습니다.'; }
   };
   el('roomPwSubmit').addEventListener('click', submit);
-  input.addEventListener('keydown', (e) => { if(e.key === 'Enter') submit(); });
+  input.addEventListener('keydown', (e) => { if(isSubmitEnter(e)) submit(); });
   el('roomPwCancel').addEventListener('click', closeModal);
 }
 function bubbleHtml(m){
@@ -937,7 +938,7 @@ function renderChatDetail(){
   `;
   el('backBtn').addEventListener('click', showMobileList);
   el('chatSendBtn').addEventListener('click', sendChannelMessage);
-  el('chatInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') sendChannelMessage(); });
+  el('chatInput').addEventListener('keydown', (e) => { if(isSubmitEnter(e)) sendChannelMessage(); });
   if(currentChannelMessages.length > 0) renderChatBubbles(currentChannelMessages);
 }
 async function sendChannelMessage(){
@@ -1135,7 +1136,7 @@ function renderRecruitDetailPanel(){
     catch(e){ showToastError(); }
   };
   el('replySendBtn').addEventListener('click', send);
-  el('replyInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') send(); });
+  el('replyInput').addEventListener('keydown', (e) => { if(isSubmitEnter(e)) send(); });
 }
 
 /* ---------- 매뉴얼 게시판 ---------- */
@@ -1180,7 +1181,7 @@ function renderManualList(){
   el('newManualBtn').addEventListener('click', () => { if(!requireProfile()) return; openManualFormModal(); });
   el('manualSearchBtn').addEventListener('click', () => { manualSearchQuery = el('manualSearchInput').value; renderManualResults(); });
   el('manualSearchInput').addEventListener('input', () => { manualSearchQuery = el('manualSearchInput').value; renderManualResults(); });
-  el('manualSearchInput').addEventListener('keydown', (e) => { if(e.key === 'Enter'){ manualSearchQuery = el('manualSearchInput').value; renderManualResults(); } });
+  el('manualSearchInput').addEventListener('keydown', (e) => { if(isSubmitEnter(e)){ manualSearchQuery = el('manualSearchInput').value; renderManualResults(); } });
   renderManualResults();
 }
 function renderManualResults(){
@@ -1292,7 +1293,7 @@ function renderManualDetail(){
     catch(e){ showToastError(); }
   };
   el('manualCommentSendBtn').addEventListener('click', sendManualComment);
-  el('manualCommentInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') sendManualComment(); });
+  el('manualCommentInput').addEventListener('keydown', (e) => { if(isSubmitEnter(e)) sendManualComment(); });
 }
 function openManualFormModal(existing){
   const isEdit = !!existing;
