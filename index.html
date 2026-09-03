@@ -839,8 +839,8 @@ function selectChannel(id){
   if(ch && isRoomLocked(ch)){ openRoomPasswordModal(ch); return; }
   selectedChannelId = id;
   renderChannelRows();
-  renderChatDetail();
   showMobileDetail();
+  renderChatDetail();
 }
 function openRoomPasswordModal(ch){
   openModal(`
@@ -859,8 +859,8 @@ function openRoomPasswordModal(ch){
       closeModal();
       selectedChannelId = ch.id;
       renderChannelRows();
-      renderChatDetail();
       showMobileDetail();
+      renderChatDetail();
     }else{ el('roomPwError').textContent = '비밀번호가 맞지 않습니다.'; }
   };
   el('roomPwSubmit').addEventListener('click', submit);
@@ -887,7 +887,7 @@ function renderChatBubbles(messages){
     return;
   }
   wrap.innerHTML = messages.map(bubbleHtml).join('');
-  wrap.scrollTop = wrap.scrollHeight;
+  requestAnimationFrame(() => { wrap.scrollTop = wrap.scrollHeight; });
   wrap.querySelectorAll('[data-del-msg]').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
