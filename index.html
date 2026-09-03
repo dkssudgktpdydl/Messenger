@@ -422,7 +422,7 @@ const ADMIN_PASSWORD = "goguma1234";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import {
   getFirestore, collection, collectionGroup, doc, addDoc, updateDoc, deleteDoc, setDoc,
-  getDoc, getDocs, onSnapshot, query, orderBy, limit
+  getDoc, getDocs, onSnapshot, query, where, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const CHANNELS = [
@@ -451,7 +451,10 @@ let isAdmin = false;
 let db = null, messagesCol = null, recruitsCol = null, agentsCol = null, manualsCol = null;
 let currentMode = 'chat';
 let selectedChannelId = CHANNELS[0].id;
-let allMessages = [];
+const CHANNEL_MESSAGE_LIMIT = 150;
+let channelPreviews = {};
+let currentChannelMessages = [];
+let unsubscribeChannelMessages = null;
 let lastRecruits = [];
 let selectedRecruitId = null;
 let currentReplies = [];
@@ -808,7 +811,6 @@ function renderDetailPanel(){
 }
 
 /* ---------- 채널 (공용 채팅) ---------- */
-function messagesForChannel(channelId){ return allMessages.filter(m => (m.channelId || 'notice') === channelId); }
 function renderChatList(){
   el('listPanel').innerHTML = `
     <div class="list-header"><h2><span class="hdr-mark-icon">${CHAT_ICON}</span> 채널</h2></div>
@@ -821,8 +823,7 @@ function renderChannelRows(){
   if(!body) return;
   body.innerHTML = CHANNELS.map(c => {
     const locked = isRoomLocked(c);
-    const msgs = locked ? [] : messagesForChannel(c.id);
-    const last = msgs[msgs.length - 1];
+    const last = locked ? null : channelPreviews[c.id];
     return `
     <div class="list-row ${c.id === selectedChannelId ? 'active' : ''}" data-channel="${c.id}">
       <div class="row-avatar chat">${locked ? LOCK_ICON : CHAT_ICON}</div>
@@ -841,6 +842,7 @@ function selectChannel(id){
   renderChannelRows();
   showMobileDetail();
   renderChatDetail();
+  subscribeChannelMessages(id);
 }
 function openRoomPasswordModal(ch){
   openModal(`
@@ -861,6 +863,7 @@ function openRoomPasswordModal(ch){
       renderChannelRows();
       showMobileDetail();
       renderChatDetail();
+      subscribeChannelMessages(ch.id);
     }else{ el('roomPwError').textContent = '비밀번호가 맞지 않습니다.'; }
   };
   el('roomPwSubmit').addEventListener('click', submit);
@@ -896,6 +899,18 @@ function renderChatBubbles(messages){
     });
   });
 }
+function subscribeChannelMessages(channelId){
+  if(unsubscribeChannelMessages){ unsubscribeChannelMessages(); unsubscribeChannelMessages = null; }
+  currentChannelMessages = [];
+  unsubscribeChannelMessages = onSnapshot(
+    query(messagesCol, where('channelId', '==', channelId), orderBy('sentAt', 'desc'), limit(CHANNEL_MESSAGE_LIMIT)),
+    (snap) => {
+      currentChannelMessages = snap.docs.map(d => ({ id: d.id, ...d.data() })).reverse();
+      if(selectedChannelId === channelId) renderChatBubbles(currentChannelMessages);
+    },
+    (err) => { console.error(err); const wrap = document.getElementById('chatScroll'); if(wrap && selectedChannelId === channelId) wrap.innerHTML = `<div class="empty">⚠️ 채널을 불러오지 못했습니다.</div>`; }
+  );
+}
 function renderChatDetail(){
   const ch = CHANNELS.find(c => c.id === selectedChannelId) || CHANNELS[0];
   el('detailPanel').innerHTML = `
@@ -915,7 +930,7 @@ function renderChatDetail(){
   el('backBtn').addEventListener('click', showMobileList);
   el('chatSendBtn').addEventListener('click', sendChannelMessage);
   el('chatInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') sendChannelMessage(); });
-  renderChatBubbles(messagesForChannel(selectedChannelId));
+  if(currentChannelMessages.length > 0) renderChatBubbles(currentChannelMessages);
 }
 async function sendChannelMessage(){
   if(!requireProfile()) return;
@@ -1380,20 +1395,24 @@ function boot(){
     renderDetailPanel();
   }, (err) => console.error(err));
 
-  onSnapshot(query(messagesCol, orderBy('sentAt', 'desc'), limit(400)), (snap) => {
-    allMessages = snap.docs.map(d => ({ id: d.id, ...d.data() })).reverse();
-    if(currentMode === 'chat'){ renderChannelRows(); renderChatBubbles(messagesForChannel(selectedChannelId)); }
-    snap.docChanges().forEach((change) => {
-      if(change.type !== 'added') return;
-      const m = change.doc.data();
-      if(!m.sentAt || m.sentAt <= notifBootTime) return;
-      if(m.authorId === myAgentId) return;
-      const chId = m.channelId || 'notice';
-      const viewingThisChannel = currentMode === 'chat' && selectedChannelId === chId && document.visibilityState === 'visible';
-      if(viewingThisChannel) return;
-      notifyChannelMessage(m, chId);
-    });
-  }, (err) => { console.error(err); const wrap = document.getElementById('chatScroll'); if(wrap) wrap.innerHTML = `<div class="empty">⚠️ 채널을 불러오지 못했습니다.</div>`; });
+  subscribeChannelMessages(selectedChannelId);
+
+  CHANNELS.forEach((ch) => {
+    onSnapshot(query(messagesCol, where('channelId', '==', ch.id), orderBy('sentAt', 'desc'), limit(1)), (snap) => {
+      const docSnap = snap.docs[0];
+      channelPreviews[ch.id] = docSnap ? { id: docSnap.id, ...docSnap.data() } : null;
+      if(currentMode === 'chat') renderChannelRows();
+      snap.docChanges().forEach((change) => {
+        if(change.type !== 'added') return;
+        const m = change.doc.data();
+        if(!m.sentAt || m.sentAt <= notifBootTime) return;
+        if(m.authorId === myAgentId) return;
+        const viewingThisChannel = currentMode === 'chat' && selectedChannelId === ch.id && document.visibilityState === 'visible';
+        if(viewingThisChannel) return;
+        notifyChannelMessage(m, ch.id);
+      });
+    }, (err) => console.error(err));
+  });
 
   onSnapshot(query(recruitsCol, orderBy('createdAt', 'desc'), limit(100)), (snap) => {
     const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
