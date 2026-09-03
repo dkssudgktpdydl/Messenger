@@ -455,6 +455,7 @@ const CHANNEL_MESSAGE_LIMIT = 150;
 let channelPreviews = {};
 let currentChannelMessages = [];
 let unsubscribeChannelMessages = null;
+let lastRenderedMsgIds = [];
 let lastRecruits = [];
 let selectedRecruitId = null;
 let currentReplies = [];
@@ -901,22 +902,44 @@ function bubbleHtml(m){
       </div>
     </div>`;
 }
-function renderChatBubbles(messages){
-  const wrap = document.getElementById('chatScroll');
-  if(!wrap) return;
-  if(messages.length === 0){
-    wrap.innerHTML = `<div class="empty">등록된 메시지가 없습니다.</div>`;
-    return;
-  }
-  wrap.innerHTML = messages.map(bubbleHtml).join('');
-  requestAnimationFrame(() => { wrap.scrollTop = wrap.scrollHeight; });
-  wrap.querySelectorAll('[data-del-msg]').forEach(btn => {
+function bindMsgDeleteButtons(container){
+  container.querySelectorAll('[data-del-msg]:not([data-bound])').forEach(btn => {
+    btn.dataset.bound = '1';
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       try{ await deleteDoc(doc(messagesCol, btn.dataset.delMsg)); }
       catch(err){ showToastError(); }
     });
   });
+}
+function renderChatBubbles(messages){
+  const wrap = document.getElementById('chatScroll');
+  if(!wrap) return;
+  if(messages.length === 0){
+    wrap.innerHTML = `<div class="empty">등록된 메시지가 없습니다.</div>`;
+    lastRenderedMsgIds = [];
+    return;
+  }
+  const newIds = messages.map(m => m.id);
+  const isAppendOnly = lastRenderedMsgIds.length > 0
+    && newIds.length >= lastRenderedMsgIds.length
+    && lastRenderedMsgIds.every((id, i) => newIds[i] === id);
+  const appended = isAppendOnly ? messages.slice(lastRenderedMsgIds.length) : messages;
+  const distanceFromBottom = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight;
+  const wasNearBottom = distanceFromBottom < 120;
+  const appendedIsMine = appended.some(m => m.authorId === myAgentId);
+
+  if(isAppendOnly){
+    if(appended.length > 0) wrap.insertAdjacentHTML('beforeend', appended.map(bubbleHtml).join(''));
+  }else{
+    wrap.innerHTML = messages.map(bubbleHtml).join('');
+  }
+  lastRenderedMsgIds = newIds;
+
+  if(!isAppendOnly || wasNearBottom || appendedIsMine){
+    requestAnimationFrame(() => { wrap.scrollTop = wrap.scrollHeight; });
+  }
+  bindMsgDeleteButtons(wrap);
 }
 function subscribeChannelMessages(channelId){
   if(unsubscribeChannelMessages){ unsubscribeChannelMessages(); unsubscribeChannelMessages = null; }
@@ -940,6 +963,7 @@ function subscribeChannelMessages(channelId){
 }
 function renderChatDetail(){
   const ch = CHANNELS.find(c => c.id === selectedChannelId) || CHANNELS[0];
+  lastRenderedMsgIds = [];
   el('detailPanel').innerHTML = `
     <div class="detail-header">
       <button class="back-btn" id="backBtn" aria-label="목록으로">‹</button>
